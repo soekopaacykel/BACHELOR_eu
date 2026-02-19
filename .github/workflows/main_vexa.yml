@@ -3,7 +3,7 @@ name: Build and deploy ASP.Net Core app to Azure Web App - VEXA
 on:
   push:
     branches:
-      - HERE-WE-WORK
+      - main
   workflow_dispatch:
 
 jobs:
@@ -41,9 +41,6 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -52,17 +49,11 @@ jobs:
           name: .net-app
           path: ./deploy-folder
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D4882CCE5C994349A8DD2643128A532C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0979B02883D6401CB9A51EDC751D2ED3 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C2AB075470DC47C1B812744CBF9827AB }}
-
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'VEXA'
           slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_83784A7583404ACBBFAEC419C58A8B86 }}
           package: ./deploy-folder
