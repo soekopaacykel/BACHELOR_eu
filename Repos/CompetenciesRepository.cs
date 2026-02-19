@@ -1,5 +1,6 @@
 using CVAPI.Models;
 using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,18 +26,37 @@ namespace CVAPI.Repos
         // Hent alle predefinerede kompetencer (Kategorier, Subkategorier og Kompetencer)
         public async Task<PredefinedData> GetPredefinedDataAsync(string region = "DK")
         {
-            var container = GetContainer(region);
-            var query = "SELECT * FROM c WHERE c.id = 'predefinedData'"; // Filtrering efter id
-            var iterator = container.GetItemQueryIterator<PredefinedData>(query);
-            var result = new List<PredefinedData>();
-
-            while (iterator.HasMoreResults)
+            try
             {
-                var response = await iterator.ReadNextAsync();
-                result.AddRange(response);
+                var container = GetContainer(region);
+                var query = "SELECT * FROM c WHERE c.id = 'predefinedData'";
+                var iterator = container.GetItemQueryIterator<dynamic>(query);
+                
+                while (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    if (response.Count > 0)
+                    {
+                        var item = response.First();
+                        
+                        // Deserialize the dynamic object to PredefinedData
+                        var json = JsonConvert.SerializeObject(item);
+                        var predefinedData = JsonConvert.DeserializeObject<PredefinedData>(json);
+                        return predefinedData;
+                    }
+                }
+            }
+            catch
+            {
+                // If deserialization fails, return empty object
             }
 
-            return result.FirstOrDefault(); // Returnerer det første matchende dokument
+            return new PredefinedData 
+            { 
+                Id = "predefinedData",
+                Competencies = new List<CompetencyCategory>(),
+                Languages = new List<Language>()
+            };
         }
     }
 }
