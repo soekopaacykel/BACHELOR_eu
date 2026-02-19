@@ -55,65 +55,40 @@ namespace CVAPI.Controllers
         [HttpGet("{region}/GetLanguages")]
         public async Task<IActionResult> GetLanguages(string region)
         {
-            try
-            {
-                var predefinedData = await _competenciesRepository.GetPredefinedDataAsync(region);
-                
-                if (predefinedData?.Languages != null)
-                {
-                    return Ok(predefinedData.Languages);
-                }
+            // Hent de prædefinerede data (inkl. sprog)
+            var predefinedData = await _competenciesRepository.GetPredefinedDataAsync(region);
 
-                return Ok(new List<object>());
-            }
-            catch
+            if (predefinedData == null || predefinedData.Languages == null)
             {
-                return Ok(new List<object>());
+                return NotFound("No languages found.");
             }
+
+            // Returner sprogene som JSON
+            return Ok(predefinedData.Languages);
         }
 
         [HttpGet("{region}/GetDegrees")]
         public async Task<IActionResult> GetDegrees(string region)
         {
-            try
-            {
-                var degrees = await _experienceRepository.GetDegreesAsync(region);
-                return Ok(degrees ?? new List<string>());
-            }
-            catch
-            {
-                return Ok(new List<string>());
-            }
+            // Hent Degrees fra CosmosDB (brug ExperienceRepository)
+            var degrees = await _experienceRepository.GetDegreesAsync(region);
+            return Ok(degrees);
         }
 
         // Hent Fields (fra CosmosDB)
         [HttpGet("{region}/GetFields")]
         public async Task<IActionResult> GetFields(string region)
         {
-            try
-            {
-                var fields = await _experienceRepository.GetFieldsAsync(region);
-                return Ok(fields ?? new List<string>());
-            }
-            catch
-            {
-                return Ok(new List<string>());
-            }
+            var fields = await _experienceRepository.GetFieldsAsync(region);
+            return Ok(fields);
         }
 
         // Hent Engineering Fields (fra CosmosDB)
         [HttpGet("{region}/GetEngineeringFields")]
         public async Task<IActionResult> GetEngineeringFields(string region)
         {
-            try
-            {
-                var engineeringFields = await _experienceRepository.GetEngineeringFieldsAsync(region);
-                return Ok(engineeringFields ?? new List<string>());
-            }
-            catch
-            {
-                return Ok(new List<string>());
-            }
+            var engineeringFields = await _experienceRepository.GetEngineeringFieldsAsync(region);
+            return Ok(engineeringFields);
         }
 
         [HttpGet("{region}/predefined")]
