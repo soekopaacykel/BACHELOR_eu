@@ -1,0 +1,103 @@
+@page
+@model CVAPI.Pages.NewProfileModel
+@{
+    ViewData["Title"] = "Create New Profile";
+}
+
+<div class="container mt-4">
+    <h1>Create New Applicant Profile</h1>
+    
+    <form method="post" enctype="multipart/form-data">
+        <!-- Existing form fields for name, contact details, etc. -->
+        
+        <!-- Personal Information section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Personal Information</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NewApplicant.FirstName" class="form-label">First Name</label>
+                        <input asp-for="NewApplicant.FirstName" class="form-control" required />
+                        <span asp-validation-for="NewApplicant.FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NewApplicant.LastName" class="form-label">Last Name</label>
+                        <input asp-for="NewApplicant.LastName" class="form-control" required />
+                        <span asp-validation-for="NewApplicant.LastName" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NewApplicant.Email" class="form-label">Email</label>
+                        <input asp-for="NewApplicant.Email" type="email" class="form-control" required />
+                        <span asp-validation-for="NewApplicant.Email" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NewApplicant.Phone" class="form-label">Phone</label>
+                        <input asp-for="NewApplicant.Phone" class="form-control" />
+                        <span asp-validation-for="NewApplicant.Phone" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <!-- Address fields -->
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="NewApplicant.Address" class="form-label">Address</label>
+                        <input asp-for="NewApplicant.Address" class="form-control" />
+                        <span asp-validation-for="NewApplicant.Address" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="NewApplicant.City" class="form-label">City</label>
+                        <input asp-for="NewApplicant.City" class="form-control" />
+                        <span asp-validation-for="NewApplicant.City" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="NewApplicant.PostalCode" class="form-label">Postal Code</label>
+                        <input asp-for="NewApplicant.PostalCode" class="form-control" />
+                        <span asp-validation-for="NewApplicant.PostalCode" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="NewApplicant.Country" class="form-label">Country</label>
+                        <input asp-for="NewApplicant.Country" class="form-control" />
+                        <span asp-validation-for="NewApplicant.Country" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Other sections like competencies, education, experience, etc. -->
+        
+        <!-- Email Invitation Option -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Access Options</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" asp-for="SendInvitationEmail" id="sendInvitation" checked>
+                    <label class="form-check-label" for="sendInvitation">
+                        Send invitation email with one-time access link
+                    </label>
+                    <div class="form-text">
+                        If checked, the applicant will receive an email with a secure link to access and update their profile.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <button type="submit" class="btn btn-primary">Create Profile</button>
+            <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

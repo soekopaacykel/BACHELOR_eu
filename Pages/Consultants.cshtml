@@ -1,0 +1,855 @@
+@page "/Consultants"
+@using CVAPI.Models
+@using CVAPI.Repos
+@using Newtonsoft.Json
+@using System.Net
+@model CVAPI.Pages.ConsultantsModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Database </title>
+    <script src="~/JS/auth.js"></script>
+    <script src="~/JS/menuAuth.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.4/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/CSS/Global.css">
+    <link rel="stylesheet" href="~/CSS/Consultants.css">
+   <style>
+</style>
+</head>
+<body>
+    <div id="userInfoContainer" class="user-info-container" style="position: fixed !important; top: 40px !important; right: 10px !important; background: white !important; padding: 12px 20px !important; border-radius: 8px !important; cursor: pointer !important; transition: all 0.3s ease !important; font-size: 0.9rem !important; color: #00534C !important; z-index: 1000 !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; min-width: 100px !important; max-width: 130px;">
+        <span>Logged in as</span>
+        <span class="user-email" id="userEmail" style="font-weight: 600 !important; color: #00855A !important;"></span>
+    </div>
+
+    <div class="content-container">
+        
+        <div class="header-bar">
+            <div class="header-logo">
+                <a href="/">
+                    <img src="~/Images/BEPALogo.png" alt="Logo" width="100" />
+                </a>
+            </div>
+            <div class="header-title"></div>
+            <div class="consultant-menu-bar">
+                <a href="/applicants" class="menu-item">Applicants</a>
+                <a href="/consultants" class="menu-item">Consultants</a>
+                <a href="/newprofile" class="menu-item-add">Add New</a>
+                <a href="/newmanager" id="admin-link" class="menu-item-add" style="display: inline-flex; align-items: center; white-space: nowrap;">
+  Admin
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       viewBox="0 0 24 24" 
+       fill="currentColor" 
+       width="16" height="16" 
+       style="margin-left: 4px;">
+    <path d="M12 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm6-7h-1V7a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2ZM9 7a3 3 0 1 1 6 0v3H9V7Zm9 13H6v-8h12v8Z"/>
+  </svg>
+</a>
+
+            </div>
+            
+        </div>
+        <a href="javascript:history.back()" class="back-button">
+    <span class="back-icon">&#10216;</span> <span class="back-text">Back</span>
+</a>
+
+        <div class="main-container">
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search by name or competence..." 
+                onkeydown="handleSearchInput(event)" autocomplete="off" />
+
+        <div id="suggestions" class="suggestions-container">
+            <div id="suggestionsList"></div>
+        </div>
+
+        <select id="levelDropdown" class="level-dropdown" onchange="filterConsultants()">
+            <option value="Show all">Show all</option>
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+            <option value="4">Level 4</option>
+            <option value="5">Level 5</option>
+            <option value="6">Level 6</option>
+            <option value="7">Level 7</option>
+            <option value="8">Level 8</option>
+            <option value="9">Level 9</option>
+            <option value="10">Level 10</option>
+        </select>
+
+        <div id="searchTags" class="search-tags"></div>
+
+        <div class="sort-dropdown-container">
+            <select id="sortDropdown" class="sort-dropdown" onchange="sortConsultants()">
+                <option value="relevance" selected>Relevance</option>
+                <option value="date">Date Added</option>
+                <option value="alphabetical">Alphabetical</option>
+                <option value="rating">Rating</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+
+            <div class="container mx-auto p-4">
+                @if (Model.Consultants.Any())
+                {
+                        <div class="consultant-list">
+                            @foreach (var consultant in Model.Consultants)
+                            {
+                                var json = JsonConvert.SerializeObject(consultant);
+                                var encodedJson = System.Net.WebUtility.HtmlEncode(json);
+                                <div class="consultant-card" data-consultant="@encodedJson">
+                                    <div class="consultant-date" style="display: none;">2025-01-01</div>
+            <div class="flex items-center mb-4">
+                <div class="flex items-center"> <!-- Sørg for at navnet og BEPA er i samme container -->
+                    <h2 class="font-semibold text-lg">
+                        <a href="/Details/@(ViewData["Region"])/@consultant.UserId" class="consultant-name" data-userid="@consultant.UserId">
+                            @consultant.FirstName @consultant.LastName
+                        </a>
+                    </h2>
+
+                    @if (consultant.Bepa)
+                    {
+                            <span class="Bepa-indicator-true ml-2">
+                                BEPA
+                            </span>
+                    }
+                </div>
+
+                <span class="ml-4 text-gray-600">
+            @Html.Raw(string.Join(" <span style='margin: 0 10px;'>|</span> ", consultant.Education.Select(e => $"{e.Degree} in {e.Field}")))
+        </span>
+
+
+
+
+            </div>
+
+                <p><strong></strong></p>
+                <ul class="competencies-list">
+                    @foreach (var category in consultant.Competencies)
+                    {
+                            <li>
+                                <strong>(@category.CategoryLevel) @category.CategoryName </strong>
+                                <ul>
+                                    @foreach (var subCategory in category.SubCategories)
+                                    {
+                                            <li>(@subCategory.SubCategoryLevel) @subCategory.SubCategoryName 
+                                                <ul>
+                                                    @foreach (var competency in subCategory.Competencies)
+                                                    {
+                                                            <li>(@competency.CompetencyLevel) @competency.CompetencyName </li>
+                                                    }
+                                                </ul>
+                                            </li>
+                                    }
+                                </ul>
+                            </li>
+                    }
+                </ul>
+                <div class="consultant-rating-stars">
+                @for (int i = 1; i <= 5; i++)
+                {
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="consultant-star-icon @(i <= consultant.PrivateRating ? "consultant-star-filled" : "consultant-star-empty")">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                }
+            </div>
+            </div>
+    }
+
+                        </div>
+                }
+                else
+                {
+                        <p class="no-results">No consultants found.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+
+        <script>
+if (typeof DEBUG === 'undefined' || DEBUG) {
+    console.debug("[DEBUG] Consultants.cshtml script loaded!");
+    // User email display is now handled by auth.js, but add backup
+    document.addEventListener('DOMContentLoaded', function() {
+        // Backup email display if auth.js didn't work
+        setTimeout(() => {
+            const userEmail = localStorage.getItem('userEmail');
+            const userEmailElement = document.getElementById('userEmail');
+            console.debug('[DEBUG] Backup email display check:', {
+                userEmail: userEmail,
+                element: !!userEmailElement,
+                currentText: userEmailElement?.textContent
+            });
+            
+            if (userEmailElement && userEmail && !userEmailElement.textContent) {
+                userEmailElement.textContent = userEmail;
+                console.debug('[DEBUG] Applied backup email display:', userEmail);
+            }
+        }, 100);
+        // Always attach click handler for password change redirect
+        var userInfo = document.getElementById('userInfoContainer');
+        if (userInfo) {
+            userInfo.style.cursor = 'pointer';
+            userInfo.addEventListener('click', function() {
+                setTimeout(function() {
+                    window.location.href = '/PasswordChange';
+                }, 200); // 200ms delay to allow cookies to propagate
+            });
+            console.debug('[DEBUG] userInfoContainer click handler attached');
+        } else {
+            console.debug('[DEBUG] userInfoContainer element not found');
+        }
+    });
+}
+</script>
+        <script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("searchInput").addEventListener("input", showSuggestions);
+    document.getElementById("searchInput").addEventListener("keydown", handleSearchInput);
+
+    // Add click event listener for the search input
+    const searchInput = document.getElementById("searchInput");
+    const suggestionsContainer = document.getElementById("suggestions");
+
+    // Show suggestions when clicking the search input
+    searchInput.addEventListener("click", function(e) {
+        if (this.value) {
+            suggestionsContainer.style.display = "block";
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener("click", function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            suggestionsContainer.style.display = "none";
+        }
+    });
+});
+
+async function initializeSearch() {
+    await fetchFullCompetencyStructure(); // Hent nye kompetencer
+    document.getElementById("searchInput").addEventListener("input", showSuggestions);
+}
+initializeSearch();
+
+window.onload = function() {
+    sortConsultants(); // Kald funktionen ved indlæsning
+};
+
+
+// Globale variabler
+let predefinedData = []; // Predefinerede kompetencer
+let searchTags = []; // Liste over søgetags
+let selectedIndex = -1; // Track keyboard navigation i suggestions
+let allCompetencies = []; // Flad liste af kompetencer
+
+
+
+function flattenFullCompetencyStructure(data) {
+    let flatList = [];
+
+    data.forEach(category => {
+        if (category.CategoryName) flatList.push(category.CategoryName);
+
+        category.SubCategories?.forEach(subCategory => {
+            if (subCategory.SubCategoryName) flatList.push(subCategory.SubCategoryName);
+
+            subCategory.Competencies?.forEach(competency => {
+                if (competency.CompetencyName) flatList.push(competency.CompetencyName);
+            });
+        });
+    });
+
+    return flatList;
+}
+
+
+
+// Hent predefinerede kompetencer fra API
+async function fetchFullCompetencyStructure() {
+    try {
+        const response = await fetch('/api/competencies/fullcompetencystructure');
+        if (!response.ok) throw new Error("Failed to fetch full competency structure");
+
+        const data = await response.json();
+        console.log("🧐 Raw data from API:", data); // Debugging API response
+
+        allCompetencies = flattenFullCompetencyStructure(data); // Brug ny metode
+        console.log("✅ Flattened competencies:", allCompetencies); // Debugging flad struktur
+    } catch (error) {
+        console.error("❌ Error fetching full competency structure:", error);
+    }
+}
+
+let allFields = []; // Global variabel til både fields og engineering fields
+
+// Funktion til at hente begge felter
+async function fetchFields() {
+    try {
+        // Hent Fields (fra API)
+        const fieldsResponse = await fetch('/api/competencies/GetFields');
+        if (!fieldsResponse.ok) {
+            throw new Error("Failed to fetch fields");
+        }
+        const fieldsData = await fieldsResponse.json();
+
+        // Hent Engineering Fields (fra API)
+        const engineeringFieldsResponse = await fetch('/api/competencies/GetEngineeringFields');
+        if (!engineeringFieldsResponse.ok) {
+            throw new Error("Failed to fetch engineering fields");
+        }
+        const engineeringFieldsData = await engineeringFieldsResponse.json();
+
+        // Kombiner de to sæt data i én liste
+        allFields = [
+            ...fieldsData || [],          // Tilføj alle fields
+            ...engineeringFieldsData || [] // Tilføj alle engineering fields
+        ];
+
+        console.log("📚 Combined fields and engineering fields loaded:", allFields); // Debugging
+    } catch (error) {
+        console.error("❌ Error fetching fields:", error);
+    }
+}
+
+// Kald funktionen når siden loader
+fetchFields();
+
+
+// Vis forslag baseret på input
+function showSuggestions() {
+    const input = document.getElementById("searchInput").value.toLowerCase();
+    const suggestionsContainer = document.getElementById("suggestions");
+    const suggestionsList = document.getElementById("suggestionsList");
+
+    if (!input) {
+        suggestionsContainer.style.display = "none";
+        return;
+    }
+
+    // Filtrer kompetencer baseret på input
+    const filteredCompetencies = allCompetencies.filter(competency =>
+        competency.toLowerCase().includes(input)
+    );
+
+    // Filtrer felter (fields og engineering fields) baseret på input
+    const filteredFields = allFields.filter(field =>
+        field.toLowerCase().includes(input)
+    );
+
+    // Ryd gammel liste
+    suggestionsList.innerHTML = "";
+
+    // Hvis ingen forslag, skjul suggestions container
+    if (filteredCompetencies.length === 0 && filteredFields.length === 0) {
+        suggestionsContainer.style.display = "none";
+        return;
+    }
+
+    // Tilføj kompetencer til forslag
+    filteredCompetencies.forEach(suggestion => {
+        const div = document.createElement("div");
+        div.textContent = suggestion;
+        div.classList.add("suggestion-item");
+        div.onclick = function () {
+            addSearchTag(suggestion); // Tilføj som søgetag
+            document.getElementById("searchInput").value = "";
+            suggestionsContainer.style.display = "none";
+        };
+        suggestionsList.appendChild(div);
+    });
+
+    // Tilføj felter (fields og engineering fields) til forslag
+    filteredFields.forEach(field => {
+        const div = document.createElement("div");
+        div.textContent = field;
+        div.classList.add("suggestion-item");
+        div.onclick = function () {
+            addSearchTag(field); // Tilføj som søgetag
+            document.getElementById("searchInput").value = "";
+            suggestionsContainer.style.display = "none";
+        };
+        suggestionsList.appendChild(div);
+    });
+
+    suggestionsContainer.style.display = "block";
+}
+
+// Håndter tastetryk i søgefeltet
+function handleSearchInput(event) {
+    const suggestions = document.querySelectorAll('.suggestion-item');
+
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Forhindrer form-submit
+
+        if (selectedIndex > -1 && suggestions.length > 0) {
+            suggestions[selectedIndex].click();
+        } else if (document.getElementById('searchInput').value.trim() !== '') {
+            addSearchTag(document.getElementById('searchInput').value.trim());
+            document.getElementById('searchInput').value = '';
+        }
+    } else if (event.key === 'ArrowDown') {
+        if (selectedIndex < suggestions.length - 1) {
+            selectedIndex++;
+        }
+        updateSuggestionHighlight(suggestions);
+    } else if (event.key === 'ArrowUp') {
+        if (selectedIndex > 0) {
+            selectedIndex--;
+        }
+        updateSuggestionHighlight(suggestions);
+    }
+}
+
+// Opdater highlight i suggestions
+function updateSuggestionHighlight(suggestions) {
+    suggestions.forEach((item, index) => {
+        item.style.backgroundColor = index === selectedIndex ? '#00855A' : 'white';
+        item.style.color = index === selectedIndex ? 'white' : 'black';
+    });
+}
+
+function addSearchTag(tag) {
+    const levelDropdown = document.getElementById('levelDropdown');
+    const level = levelDropdown.value !== "Show all" ? levelDropdown.value : null;
+    const newTag = level ? `${tag} - ${level}` : tag;
+
+    if (!searchTags.includes(newTag)) {
+        searchTags.push(newTag);
+        updateSearchTags();
+        filterConsultants();
+    }
+
+    // Reset dropdown til "Show all" efter at tag er tilføjet
+    levelDropdown.value = "Show all";
+}
+
+
+function removeSearchTag(tag) {
+    searchTags = searchTags.filter(t => t !== tag);
+    updateSearchTags();
+    filterConsultants();
+}
+
+function updateSearchTags() {
+    const searchTagsContainer = document.getElementById('searchTags');
+    searchTagsContainer.innerHTML = '';
+
+    searchTags.forEach(tag => {
+        const tagElement = document.createElement('div');
+        tagElement.classList.add('search-tag');
+        tagElement.textContent = tag;
+        tagElement.style.backgroundColor = '#00855A';
+        tagElement.style.color = 'white';
+        tagElement.style.padding = '5px 10px';
+        tagElement.style.borderRadius = '10px';
+        tagElement.style.margin = '5px';
+        tagElement.style.display = 'inline-block';
+
+        const removeBtn = document.createElement('span');
+        removeBtn.textContent = ' ✖';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.onclick = function () {
+            removeSearchTag(tag);
+        };
+
+        tagElement.appendChild(removeBtn);
+        searchTagsContainer.appendChild(tagElement);
+    });
+}
+
+function filterConsultants() {
+    const consultantCards = document.querySelectorAll('.consultant-card');
+    
+    // Reset all competency visibility first (in case of repeated searches)
+    consultantCards.forEach(card => {
+        // Show all competency items initially
+        const competencyItems = card.querySelectorAll('ul li');
+        competencyItems.forEach(item => {
+            item.classList.remove('hidden-by-filter');
+            item.classList.remove('matched-by-filter');
+        });
+    });
+    
+    // If no search tags, show all cards and return early
+    if (!searchTags || searchTags.length === 0) {
+        consultantCards.forEach(card => {
+            card.style.display = 'block';
+        });
+        return;
+    }
+
+    consultantCards.forEach(card => {
+        let consultantData;
+        const rawData = card.getAttribute('data-consultant');
+
+        try {
+            // Check if rawData exists
+            if (!rawData) {
+                console.error("❌ Missing data-consultant attribute");
+                card.style.display = 'none';
+                return;
+            }
+
+            // Debug: Show the raw data
+            console.log("🔍 Raw data from attribute:", rawData.substring(0, 200) + "...");
+
+            // Decode HTML entities before parsing JSON
+            const decodedData = rawData
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&amp;/g, '&'); // This should be last to avoid double-decoding
+
+            console.log("🔄 Decoded data:", decodedData.substring(0, 200) + "...");
+
+            // Since we're now properly HTML-encoding the JSON, we can parse it directly
+            consultantData = JSON.parse(decodedData);
+            console.log("✅ Parsed consultant data successfully");
+            console.log("👤 Consultant:", consultantData.FirstName, consultantData.LastName);
+        } catch (parseError) {
+            console.error("❌ JSON Parse Error:", parseError);
+            console.error("❌ Raw data that failed to parse:", rawData.substring(0, 500));
+            card.style.display = 'none';
+            return;
+        }
+
+        // Debug: Log what we're searching through
+        console.log("🔍 Filtering consultant:", 
+                   consultantData.FirstName + " " + consultantData.LastName, 
+                   "with searchTags:", searchTags);
+
+        // Use default empty arrays if properties are missing
+        const consultantCompetencies = consultantData.Competencies || [];
+        const consultantEducations = consultantData.Education || []; 
+        const consultantFirstName = (consultantData.FirstName || '').toLowerCase();
+        const consultantLastName = (consultantData.LastName || '').toLowerCase();
+        const consultantFullName = (consultantFirstName + ' ' + consultantLastName).toLowerCase();
+        const consultantEmail = (consultantData.Email || '').toLowerCase();
+        const consultantPhone = (consultantData.Phone || '').toLowerCase();
+        const consultantCity = (consultantData.City || '').toLowerCase();
+        
+        // Debug: Log what we're searching through
+        console.log("👤 Consultant details:", consultantFullName, consultantEmail, consultantCity);
+        console.log("🎯 competencies count:", consultantCompetencies.length);
+        console.log("🎓 education count:", consultantEducations.length);
+        
+        // Track matches for each search tag
+        let matches = 0;
+        
+        // Track matched competency paths for visibility toggling
+        const matchedCompetencyPaths = [];
+
+        // Check each search tag
+        for (const tag of searchTags) {
+            if (!tag) continue; // Skip empty tags
+            
+            const tagParts = tag.match(/(.*) - (\d+)/);
+            let searchText, requiredLevel;
+
+            if (tagParts) {
+                searchText = tagParts[1].toLowerCase();
+                requiredLevel = parseInt(tagParts[2]);
+            } else {
+                searchText = tag.toLowerCase();
+                requiredLevel = null;
+            }
+            
+            console.log(`🏷️ Checking tag: "${searchText}"${requiredLevel !== null ? ` (level ${requiredLevel})` : ''}`);
+
+            let matchFound = false;
+
+            // 1. Check personal details first (simpler check)
+            if (consultantFirstName.includes(searchText) || 
+                consultantLastName.includes(searchText) ||
+                consultantFullName.includes(searchText) ||
+                consultantEmail.includes(searchText) ||
+                consultantPhone.includes(searchText) ||
+                consultantCity.includes(searchText)) {
+                console.log(`✓ Match found in personal details for "${searchText}"`);
+                matchFound = true;
+            }
+
+            // 2. Check for match in education if no match found yet
+            if (!matchFound && Array.isArray(consultantEducations)) {
+                console.log(`🎓 Checking ${consultantEducations.length} education entries for "${searchText}"`);
+                for (const education of consultantEducations) {
+                    if (!education) continue;
+                    
+                    if ((education.Degree && education.Degree.toLowerCase().includes(searchText)) || 
+                        (education.Field && education.Field.toLowerCase().includes(searchText)) ||
+                        (education.Institution && education.Institution.toLowerCase().includes(searchText))) {
+                        console.log(`✓ Match found in education for "${searchText}"`);
+                        matchFound = true;
+                        break;
+                    }
+                }
+            }
+
+            // 3. Check for match in competencies if still no match
+            if (!matchFound && Array.isArray(consultantCompetencies)) {
+                console.log(`🎯 Checking ${consultantCompetencies.length} competency categories for "${searchText}"`);
+                // Category level
+                for (let categoryIndex = 0; categoryIndex < consultantCompetencies.length; categoryIndex++) {
+                    const category = consultantCompetencies[categoryIndex];
+                    if (!category) continue;
+                    
+                    let categoryMatched = false;
+                    
+                    if (category.CategoryName && 
+                        category.CategoryName.toLowerCase().includes(searchText) && 
+                        (requiredLevel === null || 
+                         (category.CategoryLevel && category.CategoryLevel >= requiredLevel))) {
+                        console.log(`✓ Match found in category "${category.CategoryName}" for "${searchText}"`);
+                        matchFound = true;
+                        categoryMatched = true;
+                        
+                        // Store the DOM path for later showing only matched elements
+                        matchedCompetencyPaths.push({
+                            type: 'category',
+                            index: categoryIndex
+                        });
+                    }
+
+                    // SubCategory level
+                    if (Array.isArray(category.SubCategories)) {
+                        for (let subCategoryIndex = 0; subCategoryIndex < category.SubCategories.length; subCategoryIndex++) {
+                            const subCategory = category.SubCategories[subCategoryIndex];
+                            if (!subCategory) continue;
+                            
+                            let subCategoryMatched = false;
+                            
+                            if (subCategory.SubCategoryName && 
+                                subCategory.SubCategoryName.toLowerCase().includes(searchText) && 
+                                (requiredLevel === null || 
+                                 (subCategory.SubCategoryLevel && subCategory.SubCategoryLevel >= requiredLevel))) {
+                                console.log(`✓ Match found in subcategory "${subCategory.SubCategoryName}" for "${searchText}"`);
+                                matchFound = true;
+                                categoryMatched = true;
+                                subCategoryMatched = true;
+                                
+                                // Store the DOM path
+                                matchedCompetencyPaths.push({
+                                    type: 'subcategory',
+                                    categoryIndex: categoryIndex,
+                                    subCategoryIndex: subCategoryIndex
+                                });
+                            }
+
+                            // Individual competency level
+                            if (Array.isArray(subCategory.Competencies)) {
+                                for (let competencyIndex = 0; competencyIndex < subCategory.Competencies.length; competencyIndex++) {
+                                    const competency = subCategory.Competencies[competencyIndex];
+                                    if (!competency) continue;
+                                    
+                                    if (competency.CompetencyName && 
+                                        competency.CompetencyName.toLowerCase().includes(searchText) && 
+                                        (requiredLevel === null || 
+                                         (competency.CompetencyLevel && competency.CompetencyLevel >= requiredLevel))) {
+                                        console.log(`✓ Match found in competency "${competency.CompetencyName}" for "${searchText}"`);
+                                        matchFound = true;
+                                        categoryMatched = true;
+                                        subCategoryMatched = true;
+                                        
+                                        // Store the DOM path
+                                        matchedCompetencyPaths.push({
+                                            type: 'competency',
+                                            categoryIndex: categoryIndex,
+                                            subCategoryIndex: subCategoryIndex,
+                                            competencyIndex: competencyIndex
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (matchFound) {
+                matches++;
+                console.log(`✅ Tag "${searchText}" matched (${matches}/${searchTags.length})`);
+            } else {
+                console.log(`❌ No match found for tag "${searchText}"`);
+            }
+        }
+
+        // Show the card if all searchTags match, otherwise hide the card
+        const shouldDisplay = matches === searchTags.length;
+        card.style.display = shouldDisplay ? 'block' : 'none';
+        console.log(`${shouldDisplay ? '👁️ Showing' : '🚫 Hiding'} consultant: ${consultantFullName}`);
+        
+        // If card is displayed, hide non-matching competencies
+        if (shouldDisplay && searchTags.length > 0) {
+            // Get all competency elements
+            const competencyList = card.querySelector('ul');
+            if (competencyList) {
+                // Get all top-level categories
+                const categoryItems = competencyList.querySelectorAll(':scope > li');
+                
+                // First, hide all competency items
+                categoryItems.forEach((categoryItem, categoryIndex) => {
+                    categoryItem.classList.add('hidden-by-filter');
+                    
+                    // Get subcategory items
+                    const subCategoryList = categoryItem.querySelector('ul');
+                    if (subCategoryList) {
+                        const subCategoryItems = subCategoryList.querySelectorAll(':scope > li');
+                        
+                        subCategoryItems.forEach((subCategoryItem, subCategoryIndex) => {
+                            subCategoryItem.classList.add('hidden-by-filter');
+                            
+                            // Get competency items
+                            const competencyList = subCategoryItem.querySelector('ul');
+                            if (competencyList) {
+                                const competencyItems = competencyList.querySelectorAll(':scope > li');
+                                
+                                competencyItems.forEach((competencyItem, competencyIndex) => {
+                                    competencyItem.classList.add('hidden-by-filter');
+                                });
+                            }
+                        });
+                    }
+                });
+                
+                // Then, show only matching competencies
+                matchedCompetencyPaths.forEach(path => {
+                    if (path.type === 'category' && categoryItems[path.index]) {
+                        categoryItems[path.index].classList.remove('hidden-by-filter');
+                        categoryItems[path.index].classList.add('matched-by-filter');
+                    } else if (path.type === 'subcategory' && categoryItems[path.categoryIndex]) {
+                        // Show the parent category
+                        categoryItems[path.categoryIndex].classList.remove('hidden-by-filter');
+                        categoryItems[path.categoryIndex].classList.add('matched-by-filter');
+                        
+                        // Show the specific subcategory
+                        const subCategoryList = categoryItems[path.categoryIndex].querySelector('ul');
+                        if (subCategoryList) {
+                            const subCategoryItems = subCategoryList.querySelectorAll(':scope > li');
+                            if (subCategoryItems[path.subCategoryIndex]) {
+                                subCategoryItems[path.subCategoryIndex].classList.remove('hidden-by-filter');
+                                subCategoryItems[path.subCategoryIndex].classList.add('matched-by-filter');
+                            }
+                        }
+                    } else if (path.type === 'competency' && categoryItems[path.categoryIndex]) {
+                        // Show the parent category
+                        categoryItems[path.categoryIndex].classList.remove('hidden-by-filter');
+                        categoryItems[path.categoryIndex].classList.add('matched-by-filter');
+                        
+                        // Show the parent subcategory
+                        const subCategoryList = categoryItems[path.categoryIndex].querySelector('ul');
+                        if (subCategoryList) {
+                            const subCategoryItems = subCategoryList.querySelectorAll(':scope > li');
+                            if (subCategoryItems[path.subCategoryIndex]) {
+                                subCategoryItems[path.subCategoryIndex].classList.remove('hidden-by-filter');
+                                subCategoryItems[path.subCategoryIndex].classList.add('matched-by-filter');
+                                
+                                // Show the specific competency
+                                const competencyList = subCategoryItems[path.subCategoryIndex].querySelector('ul');
+                                if (competencyList) {
+                                    const competencyItems = competencyList.querySelectorAll(':scope > li');
+                                    if (competencyItems[path.competencyIndex]) {
+                                        competencyItems[path.competencyIndex].classList.remove('hidden-by-filter');
+                                        competencyItems[path.competencyIndex].classList.add('matched-by-filter');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+    
+    // Add this CSS if it doesn't exist yet
+    if (!document.getElementById('competency-filter-styles')) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'competency-filter-styles';
+        styleElement.textContent = `
+            .hidden-by-filter {
+                display: none !important;
+            }
+            .matched-by-filter {
+                display: block !important;
+            }
+        `;
+        document.head.appendChild(styleElement);
+    }
+}
+
+function sortConsultants() {
+    const sortOption = document.getElementById('sortDropdown').value;
+    const consultantCards = Array.from(document.querySelectorAll('.consultant-card'));
+
+    // Sortere baseret på valgt option
+    consultantCards.sort((a, b) => {
+        switch (sortOption) {
+            case 'date':
+                // Sorter efter dato (du skal have en dato for dette, f.eks. en 'addedDate' property)
+                const dateA = new Date(a.querySelector('.consultant-date').textContent);
+                const dateB = new Date(b.querySelector('.consultant-date').textContent);
+                return dateB - dateA; // Nyeste først
+            case 'relevance':
+                // Relevans baseret på BEPA-indikatoren (true > false)
+                const bepaA = a.querySelector('.Bepa-indicator-true') !== null;  // Tjekker om klassen findes
+                const bepaB = b.querySelector('.Bepa-indicator-true') !== null;  // Tjekker om klassen findes
+
+                // Hvis BEPA er true, prioriter dem
+                if (bepaA && !bepaB) return -1; // A kommer før B
+                if (!bepaA && bepaB) return 1; // B kommer før A
+                return 0; // Hvis begge har samme BEPA-værdi
+            case 'alphabetical':
+                // Sorter alfabetisk efter navn
+                const nameA = a.querySelector('h2').textContent.trim().toLowerCase();
+                const nameB = b.querySelector('h2').textContent.trim().toLowerCase();
+                return nameA < nameB ? -1 : 1;
+            case 'rating':
+                // Sorter efter rating ved at tælle fyldte stjerner (klassen 'consultant-star-filled')
+                const ratingA = a.querySelectorAll('.consultant-rating-stars .consultant-star-filled').length;
+                const ratingB = b.querySelectorAll('.consultant-rating-stars .consultant-star-filled').length;
+                return ratingB - ratingA; // Højeste rating først
+            default:
+                return 0;
+        }
+    });
+
+    // Genindsæt de sorterede kort
+    const consultantList = document.querySelector('.consultant-list');
+    consultantCards.forEach(card => consultantList.appendChild(card));
+}
+    
+document.addEventListener('DOMContentLoaded', function() {
+    var match = document.cookie.match(/(?:^|;\s*)user_email=([^;]*)/);
+    console.log('user_email cookie match:', match);
+    var el = document.getElementById('userEmail');
+    console.log('userEmail element:', el);
+    if (match && el) {
+        el.textContent = decodeURIComponent(match[1]);
+        console.log('Set userEmail to:', decodeURIComponent(match[1]));
+    } else {
+        if (!match) console.warn('user_email cookie not found');
+        if (!el) console.warn('userEmail element not found');
+    }
+    // Make the box clickable
+    const userInfo = document.getElementById('userInfoContainer');
+    if (userInfo) {
+        userInfo.style.cursor = 'pointer';
+        userInfo.addEventListener('click', function() {
+            setTimeout(function() {
+                window.location.href = '/PasswordChange';
+            }, 200); // 200ms delay to allow cookies to propagate
+        });
+    }
+});
+    </script>
+</body>
+</html>

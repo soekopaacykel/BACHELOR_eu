@@ -1,0 +1,294 @@
+html, body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #00534C, #00855A);
+    background-attachment: fixed;
+}
+
+body {
+    padding-top: 0px;
+}
+
+/* Reset content-container */
+.content-container {
+    background-color: white;
+    width: 100%;
+    max-width: 1160px;
+    padding: 20px;
+    padding-top: 0px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    position: relative;
+}
+.header-bar {
+    background: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #00534C;
+    border-bottom: 1px solid #ddd;
+    width: 100%;
+    max-width: 1120px;
+    margin: 20px auto 0;
+    position: relative;
+    border-radius: 10px 10px 0 0;
+}
+.header-logo {
+    margin-top: 3px; 
+}
+
+/* -- Menu Bar -- */
+.consultant-menu-bar {
+    display: flex;
+    gap: 20px;
+    margin-right: 0px;
+    max-width: 1000px;
+}
+
+#admin-link {
+    /* Giv det et specielt udseende, fx: */
+    background-color: #00534C !important;
+    width: 60px;
+    display: inline-flex !important;
+    transition: background-color 0.3s ease;
+
+}
+
+#admin-link:hover {
+    background-color: #f1f1f1 !important;
+    color: #00855A !important;
+}
+
+.consultant-menu-bar a {
+    display: flex;
+    justify-content: center;
+    /* Centrerer elementerne horisontalt */
+    align-items: center;
+    /* Centrerer elementerne vertikalt */
+    color: #00534C;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+}
+
+.consultant-menu-bar a:hover {
+    background-color: #f1f1f1;
+    color: #00855A;
+}
+
+/* -- Menu Item Add Styling -- */
+.consultant-menu-bar .menu-item-add {
+    text-decoration: none;
+    color: white;
+    background-color: #00855A;
+    font-weight: 600;
+    padding: -5px 10px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+    margin-left: auto;
+    /* Centrering horisontalt */
+    margin-right: auto;
+    /* Centrering horisontalt */
+}
+
+.back-button-container {
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 40px;  /* Increased from 20px */
+}
+
+.back-button {
+    top: 160px;
+    left: 50px;
+    font-size: 1.2rem;
+    /* Mindre tekst */
+    font-weight: normal;
+    color: #000000;
+    text-decoration: none;
+    background: none;
+    border: none;
+    position: absolute;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    z-index: 9999;
+    /* Sørg for at knappen er øverst */
+    padding: 5px 10px;
+    /* Giv lidt plads omkring knappen */
+}
+
+.back-icon {
+    font-size: 2.1rem;
+    /* Større pil */
+    margin-right: 5px;
+    /* Afstand mellem pil og tekst */
+}
+
+.back-button:hover {
+    color: #00855A;
+    /* Hover farve for både pil og tekst */
+}
+
+.back-button:hover .back-icon {
+    color: inherit;
+    /* Sørg for at pilens farve ændrer sig ved hover */
+}
+
+.back-button:hover .back-text {
+    color: inherit;
+    /* Sørg for at tekstens farve ændrer sig ved hover */
+}
+
+/* --- Main Content Container Improvements --- */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 0 10px 40px 10px;
+    box-sizing: border-box;
+    min-height: 60vh;
+    
+}
+
+.deleted-list {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px 24px 24px 24px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.deleted-list h1 {
+    color: #00534C;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 28px;
+    text-align: left;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 12px;
+}
+
+/* --- Deleted Table Styling --- */
+.deleted-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 0;
+}
+
+.deleted-table th, .deleted-table td {
+    padding: 14px 12px;
+    text-align: left;
+    font-size: 1rem;
+}
+
+.deleted-table th {
+    background: #F7FAF7;
+    color: #00534C;
+    font-weight: 700;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.deleted-table th:last-child {
+    text-align: center;
+}
+
+.deleted-table tr {
+    transition: background 0.2s;
+}
+
+.deleted-table tbody tr:hover {
+    background: #f1f7f5;
+}
+
+.deleted-table td {
+    border-bottom: 1px solid #e2e8f0;
+    color: #333;
+    vertical-align: middle;
+}
+
+.deleted-table td:last-child {
+    min-width: 180px;
+    text-align: center;
+}
+
+/* --- Action Buttons --- */
+.restore-btn, .delete-btn {
+    padding: 7px 18px;
+    border-radius: 6px;
+    font-size: 0.97rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    margin: 0 2px;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.restore-btn {
+    background: #00855A;
+    color: #fff;
+    border: 1.5px solid #00855A;
+}
+.restore-btn:hover {
+    background: #00534C;
+    border-color: #00534C;
+}
+.delete-btn {
+    background: #fff;
+    color: #dc3545;
+    border: 1.5px solid #dc3545;
+}
+.delete-btn:hover {
+    background: #dc3545;
+    color: #fff;
+}
+
+/* --- No Results Message --- */
+.deleted-list p {
+    text-align: center;
+    color: #888;
+    font-size: 1.1rem;
+    margin: 40px 0 0 0;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1000px) {
+    .deleted-list {
+        padding: 18px 4px 18px 4px;
+        max-width: 100vw;
+    }
+    .main-container {
+        padding: 0 2vw 30px 2vw;
+    }
+    .deleted-table th, .deleted-table td {
+        font-size: 0.95rem;
+        padding: 10px 6px;
+    }
+}
+@media (max-width: 700px) {
+    .deleted-list {
+        padding: 8px 0 8px 0;
+    }
+    .deleted-table th, .deleted-table td {
+        font-size: 0.89rem;
+        padding: 7px 2px;
+    }
+    .deleted-list h1 {
+        font-size: 1.1rem;
+        padding-bottom: 7px;
+    }
+}

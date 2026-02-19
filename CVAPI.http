@@ -1,0 +1,6 @@
+@CVAPI_HostAddress = https://bachelorappservice.germanywestcentral-01.azurewebsites.net
+
+GET {{CVAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

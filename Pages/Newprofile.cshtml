@@ -1,0 +1,2184 @@
+@page "/NewProfile"
+@model CVAPI.Pages.NewProfileModel
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Profile</title>
+    <link rel="stylesheet" href="~/CSS/NewProfile.css">
+    <link rel="stylesheet" href="~/CSS/Global.css">
+    <link rel="stylesheet" href="~/CSS/error.css">
+    <script src="~/JS/regionManager.js"></script>
+    <script src="~/JS/auth.js"></script>
+    <script src="~/JS/menuAuth.js"></script>
+    <script src="~/JS/loadingSpinner.js"></script>
+</head>
+
+<body>
+    <div id="userInfoContainer" class="user-info-container" style="position: fixed !important; top: 40px !important; right: 10px !important; background: white !important; padding: 12px 20px !important; border-radius: 8px !important; cursor: pointer !important; transition: all 0.3s ease !important; font-size: 0.9rem !important; color: #00534C !important; z-index: 1000 !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; min-width: 90px !important; max-width: 90px; height: 45px;">
+        <span>Logged in as</span>
+        <span class="user-email" id="userEmail" style="font-weight: 600 !important; color: #00855A !important;">@Model.UserEmail</span>
+    </div>
+    <div class="header-bar">
+        <div class="header-logo">
+            <a href="/">
+                    <img src="~/Images/BEPALogo.png" alt="Logo" width="100" />
+                </a>
+        </div>
+        <div class="header-title"></div>
+        <div class="consultant-menu-bar">
+            <a href="/applicants" class="menu-item">Applicants</a>
+            <a href="/consultants" class="menu-item">Consultants</a>
+            <a href="/newprofile" class="menu-item-add">Add New</a>
+            <a href="/newmanager" id="admin-link" class="menu-item-add">
+                Admin
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"
+                    style="margin-left: 4px;">
+                    <path d="M12 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm6-7h-1V7a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v8a2 
+             2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2ZM9 7a3 3 0 1 1 6 0v3H9V7Zm9 13H6v-8h12v8Z" />
+                </svg>
+            </a>
+
+        </div>
+       
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="error-modal">
+        <div class="error-modal-content">
+            <span class="close-modal" onclick="closeErrorModal()">&times;</span>
+            <div class="error-modal-header">Validation Errors</div>
+            <div id="errorMessage"></div>
+            <ul id="errorList" class="error-list"></ul>
+            <div class="modal-buttons">
+                <button type="button" class="modal-button" onclick="closeErrorModal()">Fix Errors</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Region Selection Modal -->
+    <div id="regionModal" class="error-modal">
+        <div class="error-modal-content">
+            <div class="error-modal-header">Select Region</div>
+            <p style="margin-bottom: 20px;">Please select your region to continue:</p>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px; cursor: pointer;">
+                    <input type="radio" name="regionChoice" value="VN" style="margin-right: 8px;">
+                    Vietnam (VN)
+                </label>
+                <label style="display: block; cursor: pointer;">
+                    <input type="radio" name="regionChoice" value="DK" style="margin-right: 8px;">
+                    Denmark (DK)
+                </label>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-button" onclick="confirmRegionSelection()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indpak hele indholdet i en form med POST-metoden -->
+    <form method="post" enctype="multipart/form-data">
+        <!-- Hidden element to expose server-side session region to JavaScript -->
+        <div data-session-region="@(HttpContext.Session.GetString("UserRegion"))" style="display: none;"></div>
+        
+        <div class="content-container">
+            <div class="left-column">
+                <a href="javascript:history.back()" class="back-button">
+                    <span class="back-icon">&#10216;</span> <span class="back-text">Back</span>
+                </a>
+                <h1 class="main-heading">Come work with us!</h1>
+
+                <div style="position: relative; display: inline-block;">
+                    <h2 id="PersonalDetailsHeading" style="display: inline;">Personal Details</h2>
+                    <!-- Tooltip med spørgsmålstegn -->
+                    <div class="help-container"
+                        style="position: absolute; top: 4px; left: 100%; margin-left: 10px; cursor: pointer;">
+                        <!-- Hjælpeikon (perfekt cirkel) -->
+                        <span class="help-icon"
+                            style="display: inline-block; font-size: 16px; font-family: 'Roboto Slab', serif; color: #8e8e8e; background-color: #efefef; border: 1px solid #dadada; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">
+                            i
+                        </span>
+                        <!-- Tooltip -->
+                        <div class="tooltip"
+                            style="visibility: hidden; position: absolute; background-color: #ffffff; color: #3e3e3e; text-align: center; border-radius: 5px; padding: 5px 10px; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: normal; opacity: 0; transition: opacity 0.3s; width: 300px; border: 1px solid #ccc;">
+                            Personal details include your name, address, phone number and email.
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="form-group name-container">
+                    <div class="name-field">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="firstName" required placeholder="John">
+                    </div>
+                    <div class="name-field">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" required placeholder="Doe">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="address" id="address" name="address" required placeholder="123 Main Street">
+                </div>
+                <div class="form-group address-container">
+                    <div class="city-field">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" required placeholder="New York">
+                    </div>
+
+                    <div class="city-field">
+                        <label for="postalCode">Postal Code</label>
+                        <input type="number" id="postalCode" name="postalCode" placeholder="10001">
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <input type="text" id="country" name="country" required placeholder="USA">
+                </div>
+
+
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="(123) 456-7890">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="johndoe@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="linkedinProfile">LinkedIn Profile</label>
+                    <input type="url" id="linkedinProfile" name="linkedinProfile"
+                        placeholder="https://www.linkedin.com/in/johndoe">
+                </div>
+
+                <div class="form-group">
+                    <label for="summary">Summary</label>
+                    <textarea id="summary" name="summary" placeholder="A brief introduction about yourself"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="interests">Interests</label>
+                    <textarea id="interests" name="interests" placeholder="Fishing, photography, hiking"></textarea>
+                </div>
+
+
+
+                <h2 id="languagesHeading" style="display: inline; position: relative;">Languages</h2>
+                <!-- Tooltip med spørgsmålstegn -->
+                <div class="help-container" style="position: relative; display: inline-block; cursor: pointer;">
+                    <!-- Hjælpeikon (perfekt cirkel) -->
+                    <span class="help-icon"
+                        style="display: inline-block; font-size: 16px; font-family: 'Roboto Slab', serif; color: #8e8e8e; background-color: #efefef; border: 1px solid #dadada; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">
+                        i
+                    </span>
+                    <!-- Tooltip -->
+                    <div class="tooltip"
+                        style="visibility: hidden; position: absolute; background-color: #ffffff; color: #3e3e3e; text-align: center; border-radius: 5px; padding: 5px 10px; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: normal; opacity: 0; transition: opacity 0.3s; width: 300px; border: 1px solid #ccc;">
+                        Please check the languages you speak and indicate your level for each language.<br><br>
+                        0: No knowledge<br>
+                        1: Beginner<br>
+                        2: Intermediate<br>
+                        3: Advanced<br>
+                        4: Fluent<br>
+                        5: Native
+                    </div>
+
+
+                </div>
+
+                <form id="languagesForm">
+                    <div id="languagesSections">
+                        <!-- Dynamiske sprog-sektioner vil blive tilføjet her -->
+
+                        <!-- Skabelon til sprog-sektion -->
+                        <div class="language-section" id="languageTemplate" style="display:none;">
+                            <!-- Checkbox og label for sprog -->
+                            <div class="checkbox-field">
+                                <input type="checkbox" id="checkbox_template" name="languageCheckbox"
+                                    class="language-checkbox">
+                                <label for="checkbox_template">Language Name</label>
+                            </div>
+                            <!-- Label for sprognavn -->
+                            <div class="language-field">
+                                <label>Language Name</label>
+                            </div>
+                            <!-- Slider for niveau -->
+                            <div class="level-field">
+                                <input type="range" min="0" max="5" value="0" class="language-level-slider slider"
+                                    disabled>
+                                <span class="level-value">0</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
+                <!-- Education Section -->
+                <h2 id="educationHeading" style="display: inline; position: relative;">Education</h2>
+                <!-- Tooltip med spørgsmålstegn -->
+                <div class="help-container" style="position: relative; display: inline-block; cursor: pointer;">
+                    <!-- Hjælpeikon (perfekt cirkel) -->
+                    <span class="help-icon"
+                        style="display: inline-block; font-size: 16px; font-family: 'Roboto Slab', serif; color: #8e8e8e; background-color: #efefef; border: 1px solid #dadada; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">
+                        i
+                    </span>
+                    <!-- Tooltip -->
+                    <div class="tooltip"
+                        style="visibility: hidden; position: absolute; background-color: #ffffff; color: #3e3e3e; text-align: center; border-radius: 5px; padding: 5px 10px; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: normal; opacity: 0; transition: opacity 0.3s; width: 300px; border: 1px solid #ccc;">
+                        Please add your education history, including degree, field of study, institution, start and end
+                        date. Add more by clicking the button below.
+                    </div>
+                </div>
+
+
+                <form id="educationForm">
+                    <!-- Container for all education sections -->
+                    <div id="educationSections">
+                        <div class="education-section">
+                            <!-- Skjult fjern-knap -->
+                            <button class="remove-education-btn" style="display: none;">✕</button>
+
+                            <div class="form-group degree-field-container">
+                                <div class="degree-field">
+                                    <label for="degreeSelect">Degree:</label>
+                                    <select class="degreeSelect" name="Degree"></select>
+                                </div>
+
+                                <div class="degree-field">
+                                    <label for="fieldSelect">Field:</label>
+                                    <select class="fieldSelect" name="Field"></select>
+                                </div>
+                            </div>
+
+                            <div class="institution-field">
+                                <label for="institution">Institution:</label>
+                                <input type="text" id="institution" name="Institution" placeholder="Harvard University">
+                            </div>
+
+                            <div class="date-container">
+                                <div class="date-field">
+                                    <label for="startDate">Start Date:</label>
+                                    <input type="date" name="startDate" required value="@DateTime.Now.ToString("yyyy-01-01")">
+                                </div>
+                                <div class="date-field">
+                                    <label for="endDate">End Date:</label>
+                                    <input type="date" name="endDate" id="endDate" required value="@DateTime.Now.ToString("yyyy-01-01")">
+                                    <div class="current-container">
+                                        <input type="checkbox" id="current" name="current" onclick="toggleEndDate(this)">
+                                        <label for="current" class="current-label">Current</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- "Add another" button -->
+                    <button type="button" id="addEduSection">Add Education</button>
+                </form>
+
+
+            </div>
+            <div class="right-column">
+
+
+                <!-- Previous Work Section -->
+                <h2 id="PreWorkHeading" style="display: inline; position: relative;">Previous Work</h2>
+                <!-- Tooltip med spørgsmålstegn -->
+                <div class="help-container" style="position: relative; display: inline-block; cursor: pointer;">
+                    <!-- Hjælpeikon (perfekt cirkel) -->
+                    <span class="help-icon"
+                        style="display: inline-block; font-size: 16px; font-family: 'Roboto Slab', serif; color: #8e8e8e; background-color: #efefef; border: 1px solid #dadada; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">
+                        i
+                    </span>
+                    <!-- Tooltip -->
+                    <div class="tooltip"
+                        style="visibility: hidden; position: absolute; background-color: #ffffff; color: #3e3e3e; text-align: center; border-radius: 5px; padding: 5px 10px; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: normal; opacity: 0; transition: opacity 0.3s; width: 300px; border: 1px solid #ccc;">
+                        Please add you work history, including job title, company, job description, start and end date.
+                        Add more by clicking the button below.
+                    </div>
+                </div>
+                <div id="workSections" style="margin-top: 20px;">
+                    <!-- Dynamiske sektioner vil blive tilføjet her -->
+                    <div class="work-section">
+
+                        <button class="remove-work-btn" style="display: none;">✕</button>
+                        <div class="form-group">
+                            <label for="jobTitle">Title</label>
+                            <input type="text" id="jobTitle" name="jobTitle" placeholder="Mechanical Engineer">
+                            <!-- Skjult fjern-knap -->
+                        </div>
+                        <div class="form-group">
+                            <label for="company">Company</label>
+                            <input type="text" id="company" name="company" placeholder="NASA">
+                        </div>
+                        <div class="form-group">
+                            <label for="jobDescription">Description</label>
+                            <textarea id="jobDescription" name="jobDescription"
+                                placeholder="A brief description of your work"></textarea>
+                        </div>
+                        <div class="date-container">
+                            <div class="date-field">
+                                <label for="startDate">Start Date:</label>
+                                <input type="date" name="startDate" required value="@DateTime.Now.ToString("yyyy-01-01")">
+                            </div>
+                            <div class="date-field">
+                                <label for="endDate">End Date:</label>
+                                <input type="date" name="endDate" id="endDate" required value="@DateTime.Now.ToString("yyyy-01-01")">
+                                <div class="current-container">
+                                    <input type="checkbox" id="current" name="current" onclick="toggleEndDate(this)">
+                                    <label for="current" class="current-label">Current</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="addWorkSection" style="margin-top:5px; margin-bottom:80px;">Add
+                    Workplace</button><br><br>
+
+                <!-- References Section -->
+                <h2 id="referencesHeading" style="display: inline; position: relative;">References</h2>
+                <!-- Tooltip med spørgsmålstegn -->
+                <div class="help-container" style="position: relative; display: inline-block; cursor: pointer;">
+                    <!-- Hjælpeikon (perfekt cirkel) -->
+                    <span class="help-icon"
+                        style="display: inline-block; font-size: 16px; font-family: 'Roboto Slab', serif; color: #8e8e8e; background-color: #efefef; border: 1px solid #dadada; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">
+                        i
+                    </span>
+                    <!-- Tooltip -->
+                    <div class="tooltip"
+                        style="visibility: hidden; position: absolute; background-color: #ffffff; color: #3e3e3e; text-align: center; border-radius: 5px; padding: 5px 10px; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: normal; opacity: 0; transition: opacity 0.3s; width: 300px; border: 1px solid #ccc;">
+                        Please add you references, including name, company, phone number and email. Add more by clicking
+                        the button below.
+                    </div>
+                </div>
+                <form id="referencesForm">
+                    <div id="referencesSections">
+                        <!-- Dynamiske referencesectioner vil blive tilføjet her -->
+                        <div class="reference-section">
+                            <button class="remove-reference-btn" style="display: none;">✕</button>
+                            <div class="form-group">
+                                <label for="referenceName">Name:</label>
+                                <input type="text" name="Name" class="reference-name" placeholder="Sophie Lewis">
+                            </div>
+                            <div class="form-group">
+                                <label for="referenceCompany">Company:</label>
+                                <input type="text" name="Company" class="reference-company" placeholder="NASA">
+                            </div>
+                            <div class="form-group">
+                                <label for="referencePhone">Phone:</label>
+                                <input type="tel" name="Phone" class="reference-phone" placeholder="(123) 456-7890">
+                            </div>
+                            <div class="form-group">
+                                <label for="referenceEmail">Email:</label>
+                                <input type="email" name="Email" class="reference-email"
+                                    placeholder="sophielewis@nasamail.com">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="addReferenceSection">Add Reference</button>
+                </form>
+                <h2 id="CompetenciesHeading" style="display: inline; position: relative;">Competencies</h2>
+                <div class="help-container" style="position: relative; display: inline-block; cursor: pointer;">
+                    <!-- Hjælpeikon (perfekt cirkel) -->
+                    <span class="help-icon"
+                        style="display: inline-block; font-size: 16px; font-family: 'Roboto Slab', serif; color: #8e8e8e; background-color: #efefef; border: 1px solid #dadada; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">
+                        i
+                    </span>
+                    <!-- Tooltip -->
+                    <div class="tooltip"
+                        style="visibility: hidden; position: absolute; background-color: #ffffff; color: #3e3e3e; text-align: center; border-radius: 5px; padding: 5px 10px; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: normal; opacity: 0; transition: opacity 0.3s; width: 300px; border: 1px solid #ccc;">
+                        <span id="vnTooltipText">
+                            Please select a category from the dropdown menu and check all relevant competencies. <br><br>
+                            Remember to adjust the slider to reflect your level of expertise:<br><br>
+                            1: Familiar with the concept<br>
+                            5: Over 5 years of hands-on experience<br>
+                            10: Among the top 20 experts in the world
+                        </span>
+                        <span id="dkTooltipText" style="display: none;">
+                            Search for competencies and add them to your profile. <br><br>
+                            Rate your experience level:<br><br>
+                            1: Familiar with the concept<br>
+                            5: Over 5 years of hands-on experience<br>
+                            10: Among the top 20 experts in the world
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- DK Search Interface (hidden by default) -->
+                <div id="dkCompetencySearch" style="display: none; margin: 20px 0;">
+                    <input type="text" id="competencySearchInput" placeholder="Search for competencies..."
+                           style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; margin-bottom: 10px;">
+                    <div id="searchResults" style="background: white; border: 1px solid #ddd; border-radius: 5px; max-height: 200px; overflow-y: auto; display: none;"></div>
+                    <div id="selectedCompetenciesList" style="margin-top: 15px;">
+                        <p style="color: #666; font-style: italic;">No competencies selected</p>
+                    </div>
+                </div>
+                
+                <!-- VN Hierarchy Interface -->
+                <div id="vnCompetencyHierarchy">
+                    <div id="sectionsContainer"></div>
+                    <button id="addCompetenceBtn" type="button" onclick="addNewSection()">Add Competence</button>
+                </div>
+                    <br><br>
+                    <br><br>
+                <h2 id="AvailabilityHeading" style="display: inline; position: relative;">Availability</h2>
+                <div class="help-container" style="position: relative; display: inline-block; cursor: pointer;">
+                    <!-- Hjælpeikon (perfekt cirkel) -->
+                    <span class="help-icon"
+                        style="display: inline-block; font-size: 16px; font-family: 'Roboto Slab', serif; color: #8e8e8e; background-color: #efefef; border: 1px solid #dadada; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">
+                        i
+                    </span>
+                    <!-- Tooltip -->
+                    <div class="tooltip"
+                        style="visibility: hidden; position: absolute; background-color: #ffffff; color: #3e3e3e; text-align: center; border-radius: 5px; padding: 5px 10px; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: normal; opacity: 0; transition: opacity 0.3s; width: 300px; border: 1px solid #ccc;">
+                        Please inform us if you are available for work now or if you have a specific date of availability.
+                    </div>
+                </div>
+                <!-- Available Section -->
+                <div class="form-group" style="display: flex; align-items: center;">
+                    <label for="isAvailable" style="margin-right: 10px;">Are you available for work now?</label>
+                    <label for="availableYes">
+                        <input type="radio" id="availableYes" name="isAvailable" value="yes" required> Yes
+                    </label>
+                    <label for="availableNo" style="margin-left: 10px;">
+                        <input type="radio" id="availableNo" name="isAvailable" value="no" required> No
+                    </label>
+                </div>
+
+                <!-- Available When Section (initially hidden) -->
+                <div class="form-group" id="availableWhenContainer" style="display: none;">
+                    <label for="availableWhen">Available from date:</label>
+                    <input type="date" id="availableWhen" name="availableWhen">
+                    <div style="margin: 10px 0; text-align: center; font-weight: bold;">or</div>
+                    <label for="availableInterval">Available after interval:</label>
+                    <select id="availableInterval" name="availableInterval">
+                        <option value="">Select interval</option>
+                        <option value="7">1 week</option>
+                        <option value="14">2 weeks</option>
+                        <option value="30">1 month (4 weeks)</option>
+                        <option value="60">2 months</option>
+                        <option value="90">3 months or more</option>
+                    </select>
+                </div>
+
+                <!-- Gem Profil knap -->
+                <button type="button" id="saveProfileBtn" onclick="submitApplication()">Save Profile</button>
+            </div>
+
+            <input type="hidden" id="competenciesInput" name="NewApplicant.CompetenciesJson" />
+    </form>
+</body>
+
+<script>
+    if (typeof DEBUG === 'undefined' || DEBUG) {
+    console.debug("[DEBUG] Newprofile.cshtml script loaded!");
+    // User email display is now handled by auth.js, but add backup
+    document.addEventListener('DOMContentLoaded', function() {
+        // Backup email display if auth.js didn't work
+        setTimeout(() => {
+            const userEmail = localStorage.getItem('userEmail');
+            const userEmailElement = document.getElementById('userEmail');
+            console.debug('[DEBUG] Backup email display check:', {
+                userEmail: userEmail,
+                element: !!userEmailElement,
+                currentText: userEmailElement?.textContent
+            });
+            
+            if (userEmailElement && userEmail && !userEmailElement.textContent) {
+                userEmailElement.textContent = userEmail;
+                console.debug('[DEBUG] Applied backup email display:', userEmail);
+            }
+        }, 100);
+        // Always attach click handler for password change redirect
+        var userInfo = document.getElementById('userInfoContainer');
+        if (userInfo) {
+            userInfo.style.cursor = 'pointer';
+            userInfo.addEventListener('click', function() {
+                setTimeout(function() {
+                    window.location.href = '/PasswordChange';
+                }, 200); // 200ms delay to allow cookies to propagate
+            });
+            console.debug('[DEBUG] userInfoContainer click handler attached');
+        } else {
+            console.debug('[DEBUG] userInfoContainer element not found');
+        }
+        
+        // Initialize competency system based on region
+        initializeCompetencyByRegion();
+    });
+}
+
+    // Handle "Available for work" radio button changes to show/hide the 'Available When' field
+    document.getElementById("availableYes").addEventListener("change", function () {
+        document.getElementById("availableWhenContainer").style.display = "none"; // Hide the Available When field
+    });
+
+    document.getElementById("availableNo").addEventListener("change", function () {
+        document.getElementById("availableWhenContainer").style.display = "block"; // Show the Available When field
+    });
+
+    function highlightButton() {
+        console.log("highlightButton is called!");
+        let btn = document.getElementById("addCompetenceBtn");
+
+        if (btn) {
+            // Tilføj glow-effekt med box-shadow
+            btn.style.boxShadow = "0 0 20px 5px rgba(255, 223, 0, 0.8)";  // Guld glød (varm gul/orange nuance)
+            btn.style.transition = "box-shadow 0.3s ease-in-out";  // Glidende overgang
+
+            console.log("Glow effect added!");
+
+            // Lyt efter klik på knappen for at fjerne gløden og kalde den oprindelige funktion
+            btn.onclick = function () {
+                // Fjern glow
+                btn.style.boxShadow = "";
+                console.log("Glow removed after click!");
+
+                // Kald den oprindelige funktion (addNewSection)
+                addNewSection();
+            };
+        } else {
+            console.log("Button not found!");
+        }
+    }
+
+    // Initialize competency system based on region
+    function initializeCompetencyByRegion() {
+        const sessionRegionElement = document.querySelector('[data-session-region]');
+        const region = sessionRegionElement ? sessionRegionElement.getAttribute('data-session-region') : 'VN';
+        
+        console.log('Detected region:', region);
+        
+        if (region === 'DK') {
+            console.log('Setting up DK interface...');
+            // Show DK interface, hide VN interface
+            document.getElementById('dkCompetencySearch').style.display = 'block';
+            document.getElementById('vnCompetencyHierarchy').style.display = 'none';
+            document.getElementById('vnTooltipText').style.display = 'none';
+            document.getElementById('dkTooltipText').style.display = 'block';
+            
+            // Initialize DK search functionality
+            initializeDKSearch();
+        } else {
+            console.log('Setting up VN interface...');
+            // Show VN interface (default)
+            document.getElementById('dkCompetencySearch').style.display = 'none';
+            document.getElementById('vnCompetencyHierarchy').style.display = 'block';
+            document.getElementById('vnTooltipText').style.display = 'block';
+            document.getElementById('dkTooltipText').style.display = 'none';
+        }
+    }
+
+    // DK search system variables
+    let allCompetencies = [];
+    let selectedDKCompetencies = [];
+
+    function initializeDKSearch() {
+        console.log('Initializing DK search...');
+        // Build searchable competencies list from existing categories (same as VN)
+        const categories = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Categories));
+        console.log('Raw categories data:', categories);
+        allCompetencies = [];
+        
+        if (!categories || !Array.isArray(categories)) {
+            console.error('Categories data is invalid:', categories);
+            return;
+        }
+        
+        categories.forEach(category => {
+            console.log('Processing category:', category.CategoryName);
+            
+            // Add the category itself as a searchable competency
+            allCompetencies.push({
+                name: category.CategoryName,
+                category: category.CategoryName,
+                subCategory: 'General',
+                type: 'category'
+            });
+            console.log('  Added category as competency:', category.CategoryName);
+            
+            if (category.SubCategories && Array.isArray(category.SubCategories)) {
+                category.SubCategories.forEach(subCategory => {
+                    console.log('  Processing subcategory:', subCategory.SubCategoryName);
+                    
+                    // Add the subcategory itself as a searchable competency
+                    allCompetencies.push({
+                        name: subCategory.SubCategoryName,
+                        category: category.CategoryName,
+                        subCategory: subCategory.SubCategoryName,
+                        type: 'subcategory'
+                    });
+                    console.log('    Added subcategory as competency:', subCategory.SubCategoryName);
+                    
+                    // If this subcategory has specific competencies (like Programming), add those too
+                    if (subCategory.Competencies && Array.isArray(subCategory.Competencies)) {
+                        subCategory.Competencies.forEach(competency => {
+                            console.log('    Adding specific competency:', competency.CompetencyName);
+                            allCompetencies.push({
+                                name: competency.CompetencyName,
+                                category: category.CategoryName,
+                                subCategory: subCategory.SubCategoryName,
+                                type: 'competency'
+                            });
+                        });
+                    }
+                });
+            }
+        });
+        
+        console.log('Total competencies loaded:', allCompetencies.length);
+        console.log('All competencies:', allCompetencies);
+        
+        // Search specifically for "Project" related competencies
+        const projectCompetencies = allCompetencies.filter(comp => 
+            comp.name.toLowerCase().includes('project') || comp.category.toLowerCase().includes('project')
+        );
+        console.log('Competencies containing "project":', projectCompetencies);
+        
+        setupDKSearchEvents();
+    }
+
+    function setupDKSearchEvents() {
+        console.log('Setting up DK search events...');
+        const searchInput = document.getElementById('competencySearchInput');
+        const searchResults = document.getElementById('searchResults');
+        
+        if (!searchInput || !searchResults) {
+            console.error('Search elements not found!', {searchInput: !!searchInput, searchResults: !!searchResults});
+            return;
+        }
+        
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            console.log('Search query:', query);
+            
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            
+            const filtered = allCompetencies.filter(comp => 
+                comp.name.toLowerCase().includes(query) && 
+                !selectedDKCompetencies.find(sel => sel.name === comp.name)
+            );
+            
+            console.log('Filtered competencies:', filtered.length);
+            
+            if (filtered.length > 0) {
+                searchResults.innerHTML = filtered.slice(0, 8).map(comp => {
+                    const safeName = comp.name.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                    const safeCategory = comp.category.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                    const safeSubCategory = comp.subCategory.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                    
+                    // Determine display text based on type
+                    let displayText = '';
+                    if (comp.type === 'category') {
+                        displayText = `${comp.category}`;
+                    } else if (comp.type === 'subcategory') {
+                        displayText = `${comp.category} → ${comp.subCategory}`;
+                    } else {
+                        displayText = `${comp.category} → ${comp.subCategory}`;
+                    }
+                    
+                    return `<div onclick="selectDKCompetency('${safeName}', '${safeCategory}', '${safeSubCategory}')" 
+                              style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee; background: white;">
+                            <strong>${comp.name}</strong><br>
+                            <small style="color: #666;">${displayText}</small>
+                         </div>`;
+                }).join('');
+                searchResults.style.display = 'block';
+                console.log('Search results displayed');
+            } else {
+                searchResults.style.display = 'none';
+                console.log('No results found');
+            }
+        });
+        
+        // Hide results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#dkCompetencySearch')) {
+                searchResults.style.display = 'none';
+            }
+        });
+        
+        console.log('DK search events set up successfully');
+    }
+
+    function selectDKCompetency(name, category, subCategory) {
+        // Decode HTML entities back to normal characters
+        const decodeName = name.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        const decodeCategory = category.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        const decodeSubCategory = subCategory.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        
+        selectedDKCompetencies.push({
+            name: decodeName,
+            category: decodeCategory,
+            subCategory: decodeSubCategory,
+            level: 1
+        });
+        
+        updateDKCompetenciesDisplay();
+        updateCompetencies(); // Use existing update function
+        
+        // Clear search
+        document.getElementById('competencySearchInput').value = '';
+        document.getElementById('searchResults').style.display = 'none';
+    }
+
+    function updateDKCompetenciesDisplay() {
+        const listEl = document.getElementById('selectedCompetenciesList');
+        
+        if (selectedDKCompetencies.length === 0) {
+            listEl.innerHTML = '<p style="color: #666; font-style: italic;">No competencies selected</p>';
+            return;
+        }
+        
+        listEl.innerHTML = '<h3>Selected Competencies:</h3>' + 
+            selectedDKCompetencies.map((comp, index) => 
+                `<div style="border: 1px solid #ddd; border-radius: 5px; padding: 12px; margin: 8px 0; background: #f9f9f9;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <div>
+                            <strong>${comp.name}</strong><br>
+                            <small style="color: #666;">${comp.category} → ${comp.subCategory}</small>
+                        </div>
+                        <button onclick="removeDKCompetency(${index})" style="background: #ff4444; color: white; border: none; border-radius: 3px; padding: 4px 8px; font-size: 12px;">Remove</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label>Level:</label>
+                        <input type="range" min="1" max="10" value="${comp.level}" 
+                               onchange="updateDKCompetencyLevel(${index}, this.value)" style="flex: 1;">
+                        <span style="font-weight: bold; min-width: 25px;">${comp.level}</span>
+                    </div>
+                </div>`
+            ).join('');
+    }
+
+    function removeDKCompetency(index) {
+        selectedDKCompetencies.splice(index, 1);
+        updateDKCompetenciesDisplay();
+        updateCompetencies();
+    }
+
+    function updateDKCompetencyLevel(index, level) {
+        selectedDKCompetencies[index].level = parseInt(level);
+        updateDKCompetenciesDisplay();
+        updateCompetencies();
+    }
+
+    // Funktion til at hente og fylde sprogsektionerne
+    function fetchAndFillLanguages() {
+        fetch('/api/competencies/GetLanguages')
+            .then(response => response.json())
+            .then(languages => {
+                // Når sprogene er hentet, viser vi dem med en slider
+                fillLanguagesWithSliders(languages);
+            })
+            .catch(error => console.error('Fejl ved hentning af Languages:', error));
+    }
+
+    // Funktion til at vise sprogene med en slider for niveau
+    function fillLanguagesWithSliders(languages) {
+        const languageSections = document.getElementById('languagesSections');
+
+        // Gennemgå hvert sprog og tilføj det til sektionen
+        languages.forEach(language => {
+            // Dupliker skabelonen for sprogsektionen
+            const newLanguageSection = document.getElementById('languageTemplate').cloneNode(true);
+            newLanguageSection.style.display = 'block'; // Fjern skjulning af skabelon
+
+            // Find og opdater checkbox og label
+            const checkbox = newLanguageSection.querySelector('.language-checkbox');
+            checkbox.id = "checkbox_" + language.LanguageName;
+            const checkboxLabel = newLanguageSection.querySelector('label[for="checkbox_template"]');
+            checkboxLabel.setAttribute('for', "checkbox_" + language.LanguageName);
+            checkboxLabel.textContent = language.LanguageName; // Sæt sprogets navn som label
+
+            // Fjern sprognavnet label fra .language-field (det er ikke nødvendigt at vise det her)
+            const languageFieldLabel = newLanguageSection.querySelector('.language-field label');
+            languageFieldLabel.remove();  // Fjern den ekstra label
+
+            // Find og opdater niveau-slider
+            const levelSlider = newLanguageSection.querySelector('.language-level-slider');
+            levelSlider.id = "slider_" + language.LanguageName;
+            levelSlider.value = 0; // Standardværdi
+            levelSlider.disabled = true;  // Deaktiver slider som standard
+
+            // Find og opdater niveauindikatoren
+            const levelValue = newLanguageSection.querySelector('.level-value');
+            levelValue.textContent = levelSlider.value; // Initial værdi for niveauindikator
+
+            // Opdater værdien af slideren når der sker en ændring
+            levelSlider.addEventListener('input', function () {
+                levelValue.textContent = levelSlider.value;
+            });
+
+            // Event listener til checkbox for at aktivere/deaktivere slideren
+            checkbox.addEventListener('change', function () {
+                levelSlider.disabled = !checkbox.checked;  // Aktiver slider når checkbox er checked
+            });
+
+            // Tilføj den nye sprogsektion til containeren
+            languageSections.appendChild(newLanguageSection);
+        });
+    }
+
+    // Kald funktionen når DOM er klar
+    document.addEventListener('DOMContentLoaded', function () {
+        // Hent og fyld sprogene, når siden indlæses
+        fetchAndFillLanguages();
+    });
+
+
+
+    function fetchAndFillDropdowns() {
+        // Hent Degrees fra API
+        fetch('/api/competencies/GetDegrees')
+            .then(response => response.json())
+            .then(degrees => {
+                fillDropdown('degreeSelect', degrees);
+            })
+            .catch(error => console.error('Fejl ved hentning af Degrees:', error));
+
+        // Hent Fields og Engineering Fields fra API
+        fetch('/api/competencies/GetFields')
+            .then(response => response.json())
+            .then(fields => {
+                fetch('/api/competencies/GetEngineeringFields')
+                    .then(response => response.json())
+                    .then(engineeringFields => {
+                        // Kombiner Fields og Engineering Fields i én liste
+                        const allFields = fields.concat(engineeringFields);
+                        fillDropdown('fieldSelect', allFields);
+                    })
+                    .catch(error => console.error('Fejl ved hentning af Engineering Fields:', error));
+            })
+            .catch(error => console.error('Fejl ved hentning af Fields:', error));
+
+        // Funktion til at fylde dropdowns
+        function fillDropdown(selectClass, data) {
+            var selectElements = document.querySelectorAll(`.${selectClass}`);
+
+            selectElements.forEach(selectElement => {
+                // "Please choose"-option
+                if (!selectElement.querySelector('option[value=""]')) {
+                    const defaultOption = document.createElement("option");
+                    defaultOption.value = "";
+                    defaultOption.textContent = "Select your " + selectElement.name;
+                    selectElement.prepend(defaultOption); // Brug prepend for at sætte den som første option
+                }
+
+                data.forEach(function (item) {
+                    var option = document.createElement("option");
+                    option.value = item;
+                    option.textContent = item;
+                    selectElement.appendChild(option);
+                });
+            });
+        }
+    }
+
+
+    // Kald funktionen for at fylde dropdowns første gang, når DOM'en er klar
+    document.addEventListener("DOMContentLoaded", fetchAndFillDropdowns);
+
+    function toggleEndDate(currentCheckbox) {
+        // Find the closest date container that contains this checkbox
+        const dateContainer = currentCheckbox.closest('.date-container');
+        const endDateInput = dateContainer.querySelector('input[name="endDate"]');
+
+        if (currentCheckbox.checked) {
+            endDateInput.disabled = true;  // Deaktiverer 'End Date', når 'Current' er tjekket
+            endDateInput.value = "";  // Fjerner værdien, hvis checkboxen er tjekket
+        } else {
+            endDateInput.disabled = false;  // Aktiverer 'End Date', når 'Current' ikke er tjekket
+        }
+    }
+
+
+    function addEduSection() {
+        // Find containeren, hvor sektionerne skal indsættes
+        const educationSections = document.getElementById("educationSections");
+
+        // Opret en wrapper til den nye sektion
+        const newEduSection = document.createElement("div");
+        newEduSection.classList.add("education-section");
+
+        // Klon de nødvendige elementer
+        const degreeFieldContainer = document.querySelector(".degree-field-container").cloneNode(true);
+        const institutionField = document.querySelector(".institution-field").cloneNode(true);
+        const dateContainer = document.querySelector(".date-container").cloneNode(true);
+
+        // Giv de nye dropdowns unikke id'er og klasser
+        const degreeSelects = degreeFieldContainer.querySelectorAll("select");
+        degreeSelects.forEach((select, index) => {
+            select.classList.add(`new-degreeSelect-${new Date().getTime()}-${index}`);
+        });
+
+        const fieldSelects = degreeFieldContainer.querySelectorAll(".fieldSelect");
+        fieldSelects.forEach((select, index) => {
+            select.classList.add(`new-fieldSelect-${new Date().getTime()}-${index}`);
+        });
+
+        // Ryd input-felter
+        degreeSelects.forEach(select => select.selectedIndex = 0); // Ryd dropdown
+        institutionField.querySelector("input").value = ""; // Ryd institution
+        dateContainer.querySelectorAll("input").forEach(input => input.value = ""); // Ryd date input
+
+        // Håndter "current"-feltet (checkbox) korrekt
+        const currentCheckbox = dateContainer.querySelector("input[type='checkbox']");
+        if (currentCheckbox) {
+            // Reset "current" checkbox til falsk
+            currentCheckbox.checked = false;
+
+            // Lyt til ændringer på "current"-checkboxen og opdater andre input-felter
+            currentCheckbox.addEventListener("change", function () {
+                const startDateInput = dateContainer.querySelector("input[name='startDate']");
+                const endDateInput = dateContainer.querySelector("input[name='endDate']");
+
+                if (currentCheckbox.checked) {
+                    // Hvis "current" er valgt, deaktivér slutdato-input
+                    endDateInput.disabled = true;
+                    endDateInput.value = ""; // Fjern slutdatoen
+                } else {
+                    // Ellers aktiver slutdato-input
+                    endDateInput.disabled = false;
+                }
+            });
+        }
+
+        // Opret en fjern-knap til sektionen
+        const removeButton = document.createElement("button");
+        removeButton.textContent = "✕";
+        removeButton.classList.add("remove-education-btn");
+        removeButton.onclick = function () {
+            newEduSection.remove();
+        };
+
+        // Tilføj elementerne til den nye sektion
+        newEduSection.appendChild(degreeFieldContainer);
+        newEduSection.appendChild(institutionField);
+        newEduSection.appendChild(dateContainer);
+        newEduSection.appendChild(removeButton);
+
+        // Tilføj den nye sektion til den eksisterende container
+        educationSections.appendChild(newEduSection);
+
+        // Kald fetchAndFillDropdowns igen for at fylde de nye dropdowns
+        fetchAndFillDropdowns();
+    }
+
+    // Event listener for knappen "Add Education"
+    document.getElementById("addEduSection").addEventListener("click", addEduSection);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Tilføj event listener til knappen "Add Work Section"
+        const addButton = document.getElementById("addWorkSection");
+        if (addButton) {
+            addButton.addEventListener("click", addWorkSection);
+        }
+
+        // Håndter event listener for eksisterende "current"-checkboxer i eksisterende sektioner
+        const allWorkSections = document.querySelectorAll(".work-section .date-container");
+
+        allWorkSections.forEach(function (dateContainer) {
+            const currentCheckbox = dateContainer.querySelector("input[type='checkbox']");
+            if (currentCheckbox) {
+                currentCheckbox.checked = false;  // Sørg for, at den ikke er markeret som standard
+                currentCheckbox.addEventListener("change", function () {
+                    const startDateInput = dateContainer.querySelector("input[name='startDate']");
+                    const endDateInput = dateContainer.querySelector("input[name='endDate']");
+
+                    if (currentCheckbox.checked) {
+                        // Hvis "current" er valgt, deaktivér slutdato-input og fjern værdien
+                        endDateInput.disabled = true;
+                        endDateInput.value = ""; // Fjern slutdatoen
+                    } else {
+                        // Ellers aktiver slutdato-input 
+                        endDateInput.disabled = false;
+                    }
+                });
+            }
+        });
+    });
+
+
+
+    function addWorkSection() {
+        // Find containeren, hvor sektionerne skal indsættes
+        const workSections = document.getElementById("workSections");
+
+        // Opret en wrapper til den nye sektion
+        const newWorkSection = document.createElement("div");
+        newWorkSection.classList.add("work-section");
+
+        // Klon de nødvendige elementer
+        const titleField = document.querySelector("#jobTitle").parentElement.cloneNode(true);
+        const companyField = document.querySelector("#company").parentElement.cloneNode(true);
+        const descriptionField = document.querySelector("#jobDescription").parentElement.cloneNode(true);
+        const dateContainer = document.querySelector(".date-container").cloneNode(true);
+
+        // Ryd værdierne i de klonede felter
+        titleField.querySelector("input").value = "";
+        companyField.querySelector("input").value = "";
+        descriptionField.querySelector("textarea").value = "";
+        dateContainer.querySelectorAll("input").forEach(input => input.value = "");
+
+        // Håndter "current"-feltet (checkbox) korrekt
+        const currentCheckbox = dateContainer.querySelector("input[type='checkbox']");
+        if (currentCheckbox) {
+            // Reset "current" checkbox til falsk
+            currentCheckbox.checked = false;
+
+            // Lyt til ændringer på "current"-checkboxen og opdater andre input-felter
+            currentCheckbox.addEventListener("change", function () {
+                const startDateInput = dateContainer.querySelector("input[name='startDate']");
+                const endDateInput = dateContainer.querySelector("input[name='endDate']");
+
+                if (currentCheckbox.checked) {
+                    // Hvis "current" er valgt, deaktivér slutdato-input
+                    endDateInput.disabled = true;
+                    endDateInput.value = ""; // Fjern slutdatoen
+                } else {
+                    // Ellers aktiver slutdato-input
+                    endDateInput.disabled = false;
+                }
+            });
+        }
+
+        // Klon den skjulte fjern-knap og gør den synlig
+        const removeButton = document.querySelector(".remove-work-btn").cloneNode(true);
+        removeButton.style.display = "inline-block";  // Gør knappen synlig
+
+        // Fjern knapens skjul, når den bliver klonet
+        removeButton.onclick = function () {
+            newWorkSection.remove();
+        };
+
+        // Tilføj elementerne til den nye sektion
+        newWorkSection.appendChild(titleField);
+        newWorkSection.appendChild(companyField);
+        newWorkSection.appendChild(descriptionField);
+        newWorkSection.appendChild(dateContainer);
+        newWorkSection.appendChild(removeButton);
+
+        // Tilføj den nye sektion til den eksisterende container
+        workSections.appendChild(newWorkSection);
+    }
+
+
+
+    var sectionCount = 0;
+    function showSubCategories(sectionId) {
+        var categorySelect = document.getElementById("categorySelect_" + sectionId);
+        var subCategoryDiv = document.getElementById("subCategoryDiv_" + sectionId);
+        var categorySliderDiv = document.getElementById("categorySliderDiv_" + sectionId);
+
+        subCategoryDiv.innerHTML = "";
+        categorySliderDiv.innerHTML = "";
+
+        var selectedCategory = categorySelect.value;
+        var categories = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Categories));
+
+        if (selectedCategory) {
+            var category = categories.find(item => item.CategoryName === selectedCategory);
+            if (category) {
+                // Create category slider
+                var categorySliderContainer = document.createElement("div");
+                categorySliderContainer.classList.add("subcategory-slider");
+
+                var slider = document.createElement("input");
+                slider.type = "range";
+                slider.id = "category_slider_" + category.CategoryName + "_" + sectionId;
+                slider.name = "categoryLevel_" + sectionId;
+                slider.min = "0";
+                slider.max = "10";
+                slider.value = "0";
+                slider.classList.add("subcategory-slider");
+
+
+                var span = document.createElement("span");
+                span.id = "category_level_" + category.CategoryName + "_" + sectionId;
+                span.textContent = slider.value;
+
+                slider.oninput = function () {
+                    span.textContent = slider.value;
+                };
+
+                categorySliderContainer.appendChild(slider);
+                categorySliderContainer.appendChild(span);
+
+                categorySliderDiv.appendChild(categorySliderContainer);  // Append slider right below dropdown
+                categorySliderDiv.style.display = "block";  // Ensure the slider section is visible
+
+                category.SubCategories.forEach(function (subCategory) {
+                    var subCategoryContainer = document.createElement("div");
+                    subCategoryContainer.classList.add("subCategoryContainer");
+                    subCategoryContainer.id = "subCategory_" + subCategory.SubCategoryName + "_" + sectionId;
+
+                    var checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.id = subCategory.SubCategoryName + "_" + sectionId;
+                    checkbox.name = "subCategory_" + sectionId;
+                    checkbox.value = subCategory.SubCategoryName;
+
+                    var label = document.createElement("label");
+                    label.setAttribute("for", subCategory.SubCategoryName + "_" + sectionId);
+                    label.textContent = subCategory.SubCategoryName;
+
+                    var slider = document.createElement("input");
+                    slider.type = "range";
+                    slider.id = "subcategory_slider_" + subCategory.SubCategoryName + "_" + sectionId;
+                    slider.name = "subcategoryLevel_" + sectionId;
+                    slider.min = "0";
+                    slider.max = "10";
+                    slider.value = "0";
+                    slider.classList.add("subcategory-slider");
+                    slider.disabled = true;  // Disable slider by default for subcategories
+
+                    var span = document.createElement("span");
+                    span.id = "subcategory_level_" + subCategory.SubCategoryName + "_" + sectionId;
+                    span.textContent = slider.value;
+
+                    slider.oninput = function () {
+                        span.textContent = slider.value;
+                    };
+
+                    checkbox.addEventListener('change', function () {
+                        toggleCompetencies(subCategory.SubCategoryName, sectionId, checkbox.checked);
+
+                        slider.disabled = !checkbox.checked;  // Enable slider when checkbox is checked, disable when unchecked
+                    });
+
+                    subCategoryContainer.appendChild(checkbox);
+                    subCategoryContainer.appendChild(label);
+                    subCategoryContainer.appendChild(slider);
+                    subCategoryContainer.appendChild(span);
+
+                    var competencyContainer = document.createElement("div");
+                    competencyContainer.classList.add("competence-container");
+                    competencyContainer.id = "competency_" + subCategory.SubCategoryName + "_" + sectionId;
+                    subCategoryContainer.appendChild(competencyContainer);
+
+                    subCategoryDiv.appendChild(subCategoryContainer);
+                });
+                subCategoryDiv.style.display = "block";
+            }
+        }
+    }
+
+
+
+    function addNewSection() {
+        sectionCount++;
+
+        var newSectionDiv = document.createElement("div");
+        newSectionDiv.classList.add("section");
+        newSectionDiv.id = "section_" + sectionCount;
+
+        // Opret container for dropdown og slider
+        var categoryContainer = document.createElement("div");
+        categoryContainer.classList.add("category-container");
+        categoryContainer.id = "categoryContainer_" + sectionCount;  // Unikt ID for sektionen
+        newSectionDiv.appendChild(categoryContainer);  // Tilføj containeren til sektionen
+
+        // Opret checkbox for slideren (sæt den som tjekket)
+        var categoryCheckbox = document.createElement("input");
+        categoryCheckbox.type = "checkbox";
+        categoryCheckbox.classList.add("category-checkbox");
+        categoryCheckbox.id = "categoryCheckbox_" + sectionCount;
+        categoryCheckbox.checked = true;  // Sæt checkboxen som tjekket som standard
+
+        // Event listener for at fjerne sektionen, når checkboxen afmærkes
+        categoryCheckbox.addEventListener("change", function () {
+            if (!categoryCheckbox.checked) {
+                newSectionDiv.remove();  // Fjern sektionen hvis checkboxen ikke er tjekket
+            }
+        });
+
+        // Opret og tilføj dropdown
+        var categorySelect = document.createElement("select");
+        categorySelect.id = "categorySelect_" + sectionCount;
+        categorySelect.name = "category_" + sectionCount;
+        categorySelect.classList.add("category-select");
+        categorySelect.addEventListener("change", function () {
+            showSubCategories(sectionCount);
+        });
+
+        var categories = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Categories));
+
+        var defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Choose a category";
+        categorySelect.appendChild(defaultOption);
+
+        categories.forEach(function (category) {
+            var option = document.createElement("option");
+            option.value = category.CategoryName;
+            option.textContent = category.CategoryName;
+            categorySelect.appendChild(option);
+        });
+
+        // Tilføj checkbox og dropdown i den ønskede rækkefølge
+        categoryContainer.appendChild(categoryCheckbox);  // Tilføj checkbox før dropdown
+        categoryContainer.appendChild(categorySelect);  // Tilføj dropdown til containeren
+
+        // Opret kategori slider container og tilføj den til containeren
+        var categorySliderDiv = document.createElement("div");
+        categorySliderDiv.id = "categorySliderDiv_" + sectionCount;
+        categorySliderDiv.classList.add("category-slider");
+
+        // Opret slider
+        var slider = document.createElement("input");
+        slider.type = "range";
+        slider.id = "category_slider_" + sectionCount;
+        slider.name = "categoryLevel_" + sectionCount;
+        slider.min = "0";
+        slider.max = "10";
+        slider.value = "0";
+        slider.classList.add("category-slider");
+
+        // Opret span for at vise sliderens værdi
+        var sliderValue = document.createElement("span");
+        sliderValue.classList.add("category-level-span");
+        sliderValue.textContent = slider.value;
+
+        // Opdater sliderens værdi
+        slider.oninput = function () {
+            sliderValue.textContent = slider.value;
+        };
+
+        categorySliderDiv.appendChild(slider);
+        categorySliderDiv.appendChild(sliderValue);
+
+        categoryContainer.appendChild(categorySliderDiv);  // Tilføj slider til containeren
+
+        // Opret subkategori container
+        var subCategoryDiv = document.createElement("div");
+        subCategoryDiv.id = "subCategoryDiv_" + sectionCount;
+        subCategoryDiv.style.display = "none";
+        newSectionDiv.appendChild(subCategoryDiv);
+
+        // Tilføj den nye sektion til DOM'en
+        document.getElementById("sectionsContainer").appendChild(newSectionDiv);
+    }
+
+
+
+
+    function toggleCompetencies(subCategoryName, sectionId, isChecked) {
+        console.log(`toggleCompetencies called for ${subCategoryName} in section ${sectionId}, isChecked: ${isChecked}`);
+
+        var categories = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Categories));
+        var category = categories.find(item => item.SubCategories.some(subCat => subCat.SubCategoryName === subCategoryName));
+        var subCategory = category.SubCategories.find(subCat => subCat.SubCategoryName === subCategoryName);
+
+        var competencyContainer = document.getElementById("competency_" + subCategoryName + "_" + sectionId);
+        console.log(`Competency container found: ${competencyContainer !== null}`);
+
+        if (isChecked) {
+            console.log(`Showing competencies for ${subCategoryName}`);
+
+            if (!competencyContainer.hasChildNodes()) {
+                console.log(`Creating competency elements for ${subCategoryName}`);
+
+                subCategory.Competencies.forEach(function (competency) {
+                    console.log(`Creating UI for competency: ${competency.CompetencyName}`);
+
+                    // Create a container for each competency
+                    var competencyDiv = document.createElement("div");
+                    competencyDiv.classList.add("competence-container");
+
+                    // Create checkbox with a VERY CLEAR name
+                    var checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.id = competency.CompetencyName + "_" + sectionId;
+                    checkbox.name = "competency";  // Simple name
+                    checkbox.value = competency.CompetencyName;
+                    checkbox.classList.add("competency-checkbox");
+                    checkbox.dataset.competencyName = competency.CompetencyName;  // Add data attribute for easier selection
+
+                    // Create label
+                    var label = document.createElement("label");
+                    label.setAttribute("for", competency.CompetencyName + "_" + sectionId);
+                    label.textContent = competency.CompetencyName;
+                    label.classList.add("competency-label");
+
+                    // Create slider
+                    var slider = document.createElement("input");
+                    slider.type = "range";
+                    slider.id = "slider_" + competency.CompetencyName + "_" + sectionId;
+                    slider.name = "competencyLevel";
+                    slider.min = "0";
+                    slider.max = "10";
+                    slider.value = "0";
+                    slider.classList.add("competence-slider");
+                    slider.disabled = true;  // Disable slider by default
+
+                    // Create span to show slider value
+                    var span = document.createElement("span");
+                    span.id = "level_" + competency.CompetencyName + "_" + sectionId;
+                    span.textContent = slider.value;
+                    span.classList.add("competency-level-span");
+
+                    // Add input event on slider
+                    slider.oninput = function () {
+                        span.textContent = slider.value;
+                        updateCompetencies();  // Update when slider value changes
+                    };
+
+                    // Add explicit event listener to checkbox
+                    checkbox.onclick = function () {
+                        console.log(`Competency checkbox clicked: ${competency.CompetencyName}, checked: ${this.checked}`);
+                        slider.disabled = !this.checked;
+                        updateCompetencies();  // Update when checkbox state changes
+                    };
+
+                    // Add elements to competencyDiv
+                    competencyDiv.appendChild(checkbox);
+                    competencyDiv.appendChild(label);
+                    competencyDiv.appendChild(slider);
+                    competencyDiv.appendChild(span);
+
+                    // Add competencyDiv to the parent container
+                    competencyContainer.appendChild(competencyDiv);
+                });
+            }
+            competencyContainer.style.display = "block";
+        } else {
+            console.log(`Hiding competencies for ${subCategoryName}`);
+            competencyContainer.style.display = "none";
+        }
+
+        // Call updateCompetencies after toggling
+        console.log('Calling updateCompetencies from toggleCompetencies');
+        updateCompetencies();
+    }
+
+
+    function updateCompetencies() {
+        const competenciesList = [];
+        console.log("Starting updateCompetencies function...");
+
+        // Check if DK system is active
+        const dkSection = document.getElementById('dkCompetencySearch');
+        const isDKActive = dkSection && dkSection.style.display !== 'none';
+        
+        if (isDKActive && selectedDKCompetencies && selectedDKCompetencies.length > 0) {
+            // Process DK competencies - group them into the same format as VN
+            const dkGrouped = {};
+            
+            selectedDKCompetencies.forEach(comp => {
+                if (!dkGrouped[comp.category]) {
+                    dkGrouped[comp.category] = {
+                        CategoryName: comp.category,
+                        CategoryLevel: comp.level,
+                        SubCategories: {}
+                    };
+                }
+                
+                if (!dkGrouped[comp.category].SubCategories[comp.subCategory]) {
+                    dkGrouped[comp.category].SubCategories[comp.subCategory] = {
+                        SubCategoryName: comp.subCategory,
+                        SubCategoryLevel: comp.level,
+                        Competencies: []
+                    };
+                }
+                
+                dkGrouped[comp.category].SubCategories[comp.subCategory].Competencies.push({
+                    CompetencyName: comp.name,
+                    CompetencyLevel: comp.level
+                });
+                
+                // Update category level to max of its competencies
+                dkGrouped[comp.category].CategoryLevel = Math.max(
+                    dkGrouped[comp.category].CategoryLevel, comp.level
+                );
+                dkGrouped[comp.category].SubCategories[comp.subCategory].SubCategoryLevel = Math.max(
+                    dkGrouped[comp.category].SubCategories[comp.subCategory].SubCategoryLevel, comp.level
+                );
+            });
+            
+            // Convert grouped data to array format
+            Object.values(dkGrouped).forEach(category => {
+                competenciesList.push({
+                    CategoryName: category.CategoryName,
+                    CategoryLevel: category.CategoryLevel,
+                    SubCategories: Object.values(category.SubCategories)
+                });
+            });
+            
+            console.log("Processed DK competencies:", competenciesList);
+        } else {
+            // Process VN hierarchy competencies (original logic)
+            document.querySelectorAll("[id^='categorySelect_']").forEach(categorySelect => {
+            const sectionId = categorySelect.id.split("_").pop();
+            const selectedCategory = categorySelect.value;
+            console.log(`Processing section ${sectionId}, category: ${selectedCategory}`);
+
+            if (selectedCategory) {
+                // Get the category level
+                const categorySlider = document.querySelector(`#categorySliderDiv_${sectionId} input[type="range"]`);
+                const categoryLevel = categorySlider ? parseInt(categorySlider.value) : 0;
+                console.log(`Category level: ${categoryLevel}`);
+
+                // Create category object
+                const categoryObj = {
+                    CategoryName: selectedCategory,
+                    CategoryLevel: categoryLevel,
+                    SubCategories: []
+                };
+
+                // Find all subcategory containers in this section
+                const subCategoryContainers = document.querySelectorAll(`#subCategoryDiv_${sectionId} .subCategoryContainer`);
+                console.log(`Found ${subCategoryContainers.length} subcategory containers`);
+
+                subCategoryContainers.forEach(container => {
+                    const subCheckbox = container.querySelector('input[type="checkbox"]');
+
+                    if (subCheckbox && subCheckbox.checked) {
+                        const subCategoryName = subCheckbox.value;
+                        console.log(`Processing subcategory: ${subCategoryName}`);
+
+                        const subCategorySlider = container.querySelector('input[type="range"]');
+                        const subCategoryLevel = subCategorySlider ? parseInt(subCategorySlider.value) : 0;
+
+                        // Create subcategory object
+                        const subCategoryObj = {
+                            SubCategoryName: subCategoryName,
+                            SubCategoryLevel: subCategoryLevel,
+                            Competencies: []
+                        };
+
+                        // Find competency container
+                        const competencyContainer = document.getElementById(`competency_${subCategoryName}_${sectionId}`);
+                        console.log(`Competency container found: ${competencyContainer !== null}`);
+
+                        if (competencyContainer) {
+                            // Log what's inside the competency container
+                            console.log(`Competency container HTML: ${competencyContainer.innerHTML}`);
+
+                            // Find all competency checkboxes that are checked
+                            const checkedCompetencyBoxes = competencyContainer.querySelectorAll('input[type="checkbox"]:checked');
+                            console.log(`Found ${checkedCompetencyBoxes.length} checked competency checkboxes`);
+
+                            checkedCompetencyBoxes.forEach(competencyCheckbox => {
+                                const competencyName = competencyCheckbox.value;
+                                console.log(`Found checked competency: ${competencyName}`);
+
+                                const competencySlider = document.getElementById(`slider_${competencyName}_${sectionId}`);
+                                const competencyLevel = competencySlider ? parseInt(competencySlider.value) : 0;
+
+                                // Add competency to subcategory
+                                subCategoryObj.Competencies.push({
+                                    CompetencyName: competencyName,
+                                    CompetencyLevel: competencyLevel
+                                });
+                            });
+                        }
+
+                        // Add subcategory to category
+                        categoryObj.SubCategories.push(subCategoryObj);
+                    }
+                });
+
+                // Add category to competenciesList
+                competenciesList.push(categoryObj);
+            }
+            });
+        } // End VN processing
+
+        console.log("Final competencies list:", competenciesList);
+
+        // Convert to JSON string
+        const competenciesJson = JSON.stringify(competenciesList);
+
+        // UPDATE THE HIDDEN INPUT FIELD
+        const hiddenField = document.getElementById("competenciesInput");
+        if (hiddenField) {
+            hiddenField.value = competenciesJson;
+            console.log("Hidden field updated:", hiddenField.value);
+        } else {
+            console.error("Error: The hidden input field 'competenciesInput' was not found.");
+        }
+
+        return competenciesJson;
+    }
+
+    // Validation and error handling functions
+    function clearAllFieldErrors() {
+        document.querySelectorAll('.field-error').forEach(field => {
+            field.classList.remove('field-error');
+        });
+        
+        // Reset competencies heading styling
+        const competenciesHeading = document.getElementById('CompetenciesHeading');
+        if (competenciesHeading) {
+            competenciesHeading.style.color = '';
+            competenciesHeading.style.fontWeight = '';
+        }
+    }
+
+    function highlightFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.add('field-error');
+            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function showErrorModal(message, errors = []) {
+        const modal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorList = document.getElementById('errorList');
+        
+        errorMessage.textContent = message;
+        errorList.innerHTML = '';
+        
+        if (errors.length > 0) {
+            errors.forEach(error => {
+                const li = document.createElement('li');
+                li.textContent = error;
+                errorList.appendChild(li);
+            });
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').style.display = 'none';
+    }
+
+    // Region selection modal functions
+    function showRegionSelectionModal() {
+        const modal = document.getElementById('regionModal');
+        modal.style.display = 'block';
+    }
+
+    function confirmRegionSelection() {
+        const selectedRegion = document.querySelector('input[name="regionChoice"]:checked');
+        
+        if (!selectedRegion) {
+            alert('Please select a region before confirming.');
+            return;
+        }
+
+        const region = selectedRegion.value;
+        
+        // Update the session region element
+        const sessionRegionElement = document.querySelector('[data-session-region]');
+        if (sessionRegionElement) {
+            sessionRegionElement.setAttribute('data-session-region', region);
+        }
+        
+        // Store the selected region locally as backup
+        localStorage.setItem('selectedRegion', region);
+        
+        // Set region in session via AJAX call
+        fetch('/api/user/set-region', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ region: region })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Close the modal
+            document.getElementById('regionModal').style.display = 'none';
+            console.log('Region set to:', region);
+            
+            // Automatically retry form submission
+            console.log('Retrying form submission with region:', region);
+            submitApplication(); // Retry the submission automatically
+        })
+        .catch(error => {
+            console.error('Error setting region:', error);
+            // Close modal anyway and use localStorage fallback
+            document.getElementById('regionModal').style.display = 'none';
+            console.log('Retrying form submission with local region:', region);
+            submitApplication(); // Still retry even if API call failed
+        });
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        const errorModal = document.getElementById('errorModal');
+        const regionModal = document.getElementById('regionModal');
+        
+        if (event.target === errorModal) {
+            closeErrorModal();
+        }
+        if (event.target === regionModal) {
+            // Don't allow closing region modal by clicking outside - force user to select
+            // regionModal.style.display = 'none';
+        }
+    }
+
+    // Add real-time validation on field blur for better UX
+    document.addEventListener('DOMContentLoaded', function() {
+        const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'country'];
+        
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('blur', function() {
+                    if (this.classList.contains('field-error') && this.value.trim()) {
+                        this.classList.remove('field-error');
+                    }
+                });
+                
+                field.addEventListener('input', function() {
+                    if (this.classList.contains('field-error') && this.value.trim()) {
+                        this.classList.remove('field-error');
+                    }
+                });
+            }
+        });
+        
+        // Special validation for email field
+        const emailField = document.getElementById('email');
+        if (emailField) {
+            emailField.addEventListener('blur', function() {
+                if (this.value && this.checkValidity()) {
+                    this.classList.remove('field-error');
+                }
+            });
+        }
+    });
+
+    function validateForm() {
+        clearAllFieldErrors();
+        const errors = [];
+        
+        // Required field validations
+        const requiredFields = [
+            { id: 'firstName', label: 'First Name' },
+            { id: 'lastName', label: 'Last Name' },
+            { id: 'email', label: 'Email' },
+            { id: 'phone', label: 'Phone' },
+            { id: 'address', label: 'Address' },
+            { id: 'city', label: 'City' },
+            { id: 'country', label: 'Country' }
+        ];
+        
+        requiredFields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (!element || !element.value.trim()) {
+                errors.push(`${field.label} is required`);
+                highlightFieldError(field.id);
+            }
+        });
+        
+        // Email validation
+        const emailElement = document.getElementById('email');
+        const email = emailElement?.value;
+        if (email && !emailElement.checkValidity()) {
+            errors.push('Please enter a valid email address');
+            highlightFieldError('email');
+        }
+        
+        // Competency validation - check for checked competencies with level 0
+        const competencyErrors = validateCompetencies();
+        if (competencyErrors.length > 0) {
+            errors.push(...competencyErrors);
+            // Highlight competencies section
+            const competenciesHeading = document.getElementById('CompetenciesHeading');
+            if (competenciesHeading) {
+                competenciesHeading.style.color = '#ff4444';
+                competenciesHeading.style.fontWeight = 'bold';
+            }
+        }
+        
+        return errors;
+    }
+    
+    function validateCompetencies() {
+        const competencyErrors = [];
+        
+        // Check if DK system is active
+        const dkSection = document.getElementById('dkCompetencySearch');
+        const isDKActive = dkSection && dkSection.style.display !== 'none';
+        
+        if (isDKActive) {
+            // For DK system, check selectedDKCompetencies array
+            if (selectedDKCompetencies && selectedDKCompetencies.length > 0) {
+                selectedDKCompetencies.forEach(comp => {
+                    if (comp.level === 0) {
+                        competencyErrors.push(`Competency "${comp.name}" is selected but has no level assigned (0). Please set a level between 1-10.`);
+                    }
+                });
+            }
+        } else {
+            // For VN system, check checkboxes and their corresponding sliders
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="competencyCheck"]:checked');
+            checkboxes.forEach(checkbox => {
+                const competencyName = checkbox.value;
+                const sectionId = checkbox.id.split('_').pop();
+                const sliderId = `slider_${competencyName}_${sectionId}`;
+                const slider = document.getElementById(sliderId);
+                
+                if (slider && parseInt(slider.value) === 0) {
+                    competencyErrors.push(`Competency "${competencyName}" is checked but has no level assigned (0). Please adjust the level slider.`);
+                }
+            });
+        }
+        
+        return competencyErrors;
+    }
+
+    async function submitApplication() {
+        try {
+            // First, validate all form fields
+            const validationErrors = validateForm();
+            if (validationErrors.length > 0) {
+                showErrorModal('Please fix the following errors before submitting:', validationErrors);
+                return;
+            }
+            
+            // Get current region from server-side session - NO DK fallback
+            let region = null;
+            
+            // Get region from server-side session via hidden element  
+            const sessionRegionElement = document.querySelector('[data-session-region]');
+            if (sessionRegionElement) {
+                region = sessionRegionElement.getAttribute('data-session-region');
+            }
+            
+            // Fallback to localStorage if session region is not available
+            if (!region || (region !== 'VN' && region !== 'DK')) {
+                region = localStorage.getItem('selectedRegion');
+            }
+            
+            // Validate region before proceeding
+            if (!region || (region !== 'VN' && region !== 'DK')) {
+                showRegionSelectionModal();
+                return;
+            }
+            
+            console.log('Using region for submission:', region);
+            let profilePictureUrl = null;
+
+            // Make sure the competencies are updated before submission
+            updateCompetencies();
+
+            // Get the competencies JSON string from the hidden input
+            const competenciesJsonString = document.getElementById("competenciesInput")?.value || "";
+            let competenciesObject = [];
+
+            // Parse the competencies JSON if it exists
+            if (competenciesJsonString) {
+                try {
+                    competenciesObject = JSON.parse(competenciesJsonString);
+                    // Ensure it's an array
+                    if (!Array.isArray(competenciesObject)) {
+                        console.error('Competencies data is not an array!');
+                        competenciesObject = [];
+                    }
+
+                    // Validér hver eneste lille lorte ting
+                    competenciesObject = competenciesObject.map(category => ({
+                        CategoryName: category.CategoryName || "",
+                        CategoryLevel: category.CategoryLevel || 0,
+                        SubCategories: Array.isArray(category.SubCategories) ? category.SubCategories.map(sub => ({
+                            SubCategoryName: sub.SubCategoryName || "",
+                            SubCategoryLevel: sub.SubCategoryLevel || 0,
+                            Competencies: Array.isArray(sub.Competencies) ? sub.Competencies.map(comp => ({
+                                CompetencyName: comp.CompetencyName || "",
+                                CompetencyLevel: comp.CompetencyLevel || 0
+                            })) : []
+                        })) : []
+                    }));
+
+                } catch (error) {
+                    console.error('Error parsing competencies:', error);
+                    competenciesObject = [];
+                }
+            }
+
+            // Log the structured competencies for debugging
+            console.log("Structured competencies:", JSON.stringify(competenciesObject, null, 2));
+            // Initialiser educationData og previousWorkPlacesData som tomme arrays
+            const educationData = [];
+            const previousWorkPlacesData = [];
+            // Hent referencerne fra DOM'en
+            const referenceSections = Array.from(document.querySelectorAll(".reference-section"));
+            const referencesData = [];
+
+            referenceSections.forEach((section) => {
+                const referenceName = section.querySelector(".reference-name")?.value || "";
+                const referenceCompany = section.querySelector(".reference-company")?.value || "";
+                const referencePhone = section.querySelector(".reference-phone")?.value || "";
+                const referenceEmail = section.querySelector(".reference-email")?.value || "";
+
+                // Kun tilføj reference, hvis navn er udfyldt
+                if (referenceName) {
+                    referencesData.push({
+                        Name: referenceName,
+                        Company: referenceCompany || null,
+                        Phone: referencePhone || null,
+                        Email: referenceEmail || null
+                    });
+                }
+            });
+
+            console.log("References data before sending:", referencesData); // For debugging
+
+            const educationSections = Array.from(document.querySelectorAll(".education-section"));
+            // Hent alle arbejdspladssektioner
+            const workPlaceSections = Array.from(document.querySelectorAll(".work-section")); // Get only work sections
+
+            // Behandl education data
+            educationSections.forEach((section) => {
+                const degree = section.querySelector(".degreeSelect").value;
+                const field = section.querySelector(".fieldSelect").value;
+                const institution = section.querySelector("input[name='Institution']").value;
+                const startDate = section.querySelector("input[name='startDate']").value;
+                const endDate = section.querySelector("input[name='endDate']").value;
+                const isCurrent = section.querySelector("input[name='current']").checked;
+
+                // Hvis "Current" er valgt, sæt endDate som null
+                const actualEndDate = isCurrent ? null : endDate;  // Send null hvis 'Current'
+
+                // Beregn EndDateString (f.eks. "Jun 2026")
+                let endDateString = "";
+                if (actualEndDate) {
+                    const endDateObj = new Date(actualEndDate);
+                    endDateString = endDateObj.toLocaleString("en-US", { month: "short", year: "numeric" });
+                }
+
+                // Default values for missing date parts
+                const defaultValue = "01";
+                
+                // Helper function to fix incomplete dates
+                function fixIncompleteDate(dateStr) {
+                    if (!dateStr) return "";
+                    const parts = dateStr.split('-');
+                    // If we have just the year
+                    if (parts.length === 1) return `${parts[0]}-${defaultValue}-${defaultValue}`;
+                    // If we have year and month
+                    if (parts.length === 2) return `${parts[0]}-${parts[1]}-${defaultValue}`;
+                    return dateStr;
+                }
+
+                // Tilføj til educationData, med default værdier hvis nødvendigt
+                if (degree && field && institution && startDate) {
+                    educationData.push({
+                        Degree: degree || "",
+                        Field: field || "",
+                        Institution: institution || "",
+                        StartDate: fixIncompleteDate(startDate),
+                        EndDate: actualEndDate ? fixIncompleteDate(actualEndDate) : null,
+                        EndDateString: endDateString || "",  // Hvis endDate findes, lav EndDateString
+                    });
+                }
+            });
+
+            // Behandl previousWorkPlaces data
+            const workSections = document.querySelectorAll(".work-section");
+            workSections.forEach(section => {
+                const jobTitle = section.querySelector("[name='jobTitle']")?.value;
+                const company = section.querySelector("[name='company']")?.value;
+                const jobDescription = section.querySelector("[name='jobDescription']")?.value;
+                const startDate = section.querySelector("[name='startDate']")?.value;
+                const endDate = section.querySelector("[name='endDate']")?.value;
+                const isCurrent = section.querySelector("[name='current']")?.checked;
+
+                // Hvis "Current" er valgt, sæt endDate som null
+                const actualEndDate = isCurrent ? null : endDate;
+
+                // Tilføj til previousWorkPlacesData, kun hvis de nødvendige felter er udfyldt
+                if (jobTitle && company && startDate) {
+                    previousWorkPlacesData.push({
+                        Position: jobTitle || "",
+                        Company: company || "",
+                        Description: jobDescription || "",
+                        StartDate: startDate || "",  // Brug den oprindelige startdato
+                        EndDate: actualEndDate,  // Send null if current, otherwise the date
+                    });
+                }
+            });
+
+            // Output de indsamlede data for education og previousWorkPlaces før de sendes
+            console.log("Education data before sending:", JSON.stringify(educationData, null, 2));
+            console.log("Previous Work Places data before sending:", JSON.stringify(previousWorkPlacesData, null, 2));
+            // Hent sprogdata
+            // Hent sprogdata
+            const languagesData = [];
+            const languageSections = document.querySelectorAll('.language-section');
+
+            languageSections.forEach(section => {
+                const checkbox = section.querySelector('.language-checkbox');
+                const slider = section.querySelector('.language-level-slider');
+
+                // Hvis checkboxen er valgt
+                if (checkbox.checked) {
+                    const languageName = section.querySelector('label').textContent.trim();
+                    const level = parseInt(slider.value);  // Sørg for at vi sender niveau som et tal
+
+                    languagesData.push({
+                        LanguageName: languageName,
+                        LanguageLevel: level  // Sørg for at bruge "LanguageLevel" som model
+                    });
+                }
+            });
+
+            // Output de indsamlede data før de sendes
+            console.log("Languages data before sending:", JSON.stringify(languagesData, null, 2));
+
+
+            // Determine availability from radio buttons
+            let isAvailable = true;
+            let availableWhen = null;
+            let availableInterval = null;
+            const availableYes = document.getElementById("availableYes");
+            const availableNo = document.getElementById("availableNo");
+            if (availableNo && availableNo.checked) {
+                isAvailable = false;
+                const availableWhenInput = document.getElementById("availableWhen");
+                const availableIntervalInput = document.getElementById("availableInterval");
+                if (availableWhenInput && availableWhenInput.value) {
+                    availableWhen = availableWhenInput.value;
+                } else if (availableIntervalInput && availableIntervalInput.value) {
+                    availableInterval = parseInt(availableIntervalInput.value);
+                }
+            }
+
+            const applicant = {
+                Id: "",
+                UserId: "",
+                Password: "",
+                FirstName: document.getElementById("firstName")?.value || "",
+                LastName: document.getElementById("lastName")?.value || "",
+                Email: document.getElementById("email")?.value || "",
+                Phone: document.getElementById("phone")?.value || "",
+                Address: document.getElementById("address")?.value || "",
+                City: document.getElementById("city")?.value || "",
+                PostalCode: document.getElementById("postalCode")?.value ? parseInt(document.getElementById("postalCode").value) : null,
+                Country: document.getElementById("country")?.value || "",
+                Interests: document.getElementById("interests")?.value || "",
+                Linkedin: document.getElementById("linkedinProfile")?.value || "",
+                CV: "",
+                Summary: document.getElementById("summary")?.value || "",
+                ProfilePicture: profilePictureUrl,
+                Competencies: competenciesObject,
+                PrivateNotes: [], // Changed from empty string to empty array
+                Languages: languagesData,
+                Education: educationData,
+                PreviousWorkPlaces: previousWorkPlacesData,
+                References: referencesData,
+                IsAvailable: isAvailable,
+                AvailableWhen: availableWhen,
+                AvailableInterval: availableInterval,
+                NewApplicant: true,
+            };
+
+            console.log("Applicant data before sending:", applicant);
+            console.log("JSON payload before sending:", JSON.stringify(applicant, null, 2));
+
+            const response = await fetch(`/api/user/${region}/create-applicant`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: JSON.stringify(applicant),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Server response (${response.status}):`, errorText);
+                
+                let errorMessage = `Server Error (${response.status})`;
+                let errors = [];
+                
+                if (response.status === 401) {
+                    errorMessage = 'Authentication Error (401)';
+                    errors = [
+                        'Your session has expired or you are not authorized',
+                        'Please refresh the page and log in again',
+                        'If you continue to see this error, contact your administrator'
+                    ];
+                } else if (response.status === 400) {
+                    errorMessage = 'Invalid Data (400)';
+                    errors = [
+                        'Some of the information you provided is invalid',
+                        'Please check all fields and try again'
+                    ];
+                    // Try to parse specific validation errors from response
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        if (errorData.errors) {
+                            errors = Object.values(errorData.errors).flat();
+                        }
+                    } catch (e) {
+                        // Keep generic errors if can't parse response
+                    }
+                } else if (response.status >= 500) {
+                    errorMessage = 'Server Error (500)';
+                    errors = [
+                        'The server encountered an internal error',
+                        'Please try again in a few minutes',
+                        'If the problem persists, contact support'
+                    ];
+                } else {
+                    errors = ['Please try again or contact support if the problem persists'];
+                }
+                
+                showErrorModal(errorMessage, errors);
+                return;
+            }
+
+            const responseBody = await response.json();
+            console.log("Applicant created:", responseBody);
+            
+            // Redirect to success page with only region parameter (JWT is already in localStorage)
+            window.location.href = `/SuccessPage?region=${region}`;
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            
+            let errorMessage = 'An error occurred while submitting your application.';
+            let specificErrors = [];
+            
+            // Handle specific error types
+            if (error.message.includes('401')) {
+                errorMessage = 'Authentication Error (401)';
+                specificErrors = [
+                    'Your session may have expired',
+                    'Please try refreshing the page and logging in again',
+                    'If the problem persists, contact your administrator'
+                ];
+            } else if (error.message.includes('CV upload failed')) {
+                errorMessage = 'CV Upload Failed';
+                specificErrors = [
+                    'There was a problem uploading your CV file',
+                    'Please check your internet connection',
+                    'Make sure the file is a valid PDF and try again'
+                ];
+                highlightFieldError('cv');
+            } else if (error.message.includes('Failed to upload profile picture')) {
+                errorMessage = 'Profile Picture Upload Failed';
+                specificErrors = [
+                    'There was a problem uploading your profile picture',
+                    'You can continue without a profile picture or try uploading a different image'
+                ];
+                highlightFieldError('profilePicture');
+            } else if (error.message.includes('HTTP error')) {
+                const statusMatch = error.message.match(/Status: (\d+)/);
+                const status = statusMatch ? statusMatch[1] : 'Unknown';
+                errorMessage = `Server Error (${status})`;
+                specificErrors = [
+                    'The server encountered an error while processing your request',
+                    'Please try again in a few moments',
+                    'If the problem persists, contact support'
+                ];
+            } else {
+                specificErrors = [error.message || 'Please try again or contact support if the problem persists'];
+            }
+            
+            showErrorModal(errorMessage, specificErrors);
+            return;
+        }
+    }
+    function addReferenceSection() {
+        // Find containeren, hvor sektionerne skal indsættes
+        const referencesSections = document.getElementById("referencesSections");
+
+        // Opret en wrapper til den nye sektion
+        const newReferenceSection = document.createElement("div");
+        newReferenceSection.classList.add("reference-section");
+
+        // Klon de nødvendige elementer
+        const referenceNameField = document.querySelector(".reference-name").parentElement.cloneNode(true);
+        const referenceCompanyField = document.querySelector(".reference-company").parentElement.cloneNode(true);
+        const referencePhoneField = document.querySelector(".reference-phone").parentElement.cloneNode(true);
+        const referenceEmailField = document.querySelector(".reference-email").parentElement.cloneNode(true);
+
+        // Ryd input-felter
+        referenceNameField.querySelector("input").value = ""; // Ryd navn
+        referenceCompanyField.querySelector("input").value = ""; // Ryd virksomhed
+        referencePhoneField.querySelector("input").value = ""; // Ryd telefon
+        referenceEmailField.querySelector("input").value = ""; // Ryd email
+
+        // Opret en fjern-knap til sektionen
+        const removeButton = document.createElement("button");
+        removeButton.textContent = "✕";
+        removeButton.classList.add("remove-reference-btn");
+        removeButton.onclick = function () {
+            newReferenceSection.remove();
+        };
+
+        // Tilføj elementerne til den nye sektion
+        newReferenceSection.appendChild(referenceNameField);
+        newReferenceSection.appendChild(referenceCompanyField);
+        newReferenceSection.appendChild(referencePhoneField);
+        newReferenceSection.appendChild(referenceEmailField);
+        newReferenceSection.appendChild(removeButton);
+
+        // Tilføj den nye sektion til den eksisterende container
+        referencesSections.appendChild(newReferenceSection);
+    }
+
+    // Event listener for knappen "Add Reference"
+    document.getElementById("addReferenceSection").addEventListener("click", addReferenceSection);
+
+
+    // JavaScript til at vise tooltip, når du hoverer over alle hjælp-ikonerne
+    document.querySelectorAll('.help-container').forEach(function (container) {
+        // Når musen er over et hjælpelogo
+        container.addEventListener('mouseover', function () {
+            var tooltip = this.querySelector('.tooltip');
+            tooltip.style.visibility = 'visible';
+            tooltip.style.opacity = 1;
+        });
+
+        // Når musen forlader hjælpelogoet
+        container.addEventListener('mouseout', function () {
+            var tooltip = this.querySelector('.tooltip');
+            tooltip.style.visibility = 'hidden';
+            tooltip.style.opacity = 0;
+        });
+    });
+
+    // Function to initialize the page with the first section
+    function initializePage() {
+        // Add the first section
+        addNewSection();
+    }
+
+    // Run initialization when the DOM is fully loaded
+    document.addEventListener("DOMContentLoaded", function () {
+        initializePage();
+    });
+
+    // Add JS to clear one field if the other is set (date/interval):
+document.addEventListener("DOMContentLoaded", function () {
+    const availableWhenInput = document.getElementById("availableWhen");
+    const availableIntervalInput = document.getElementById("availableInterval");
+    if (availableWhenInput && availableIntervalInput) {
+        availableWhenInput.addEventListener("input", function () {
+            if (this.value) availableIntervalInput.value = "";
+        });
+        availableIntervalInput.addEventListener("change", function () {
+            if (this.value) availableWhenInput.value = "";
+        });
+    }
+});
+
+// Helper to get JWT token from cookies
+function getJwtTokenFromCookie() {
+    const match = document.cookie.match(/(?:^|; )jwt_token=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+</script>
+
+</html>

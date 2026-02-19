@@ -1,0 +1,52 @@
+@page
+@model CVAPI.Pages.ValidateLinkModel
+@{
+    ViewData["Title"] = "Validate Link";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Link Validation</h2>
+                </div>
+                <div class="card-body">
+                    @if (Model.IsValid)
+                    {
+                        <div class="alert alert-success">
+                            <h4>Link Validated Successfully!</h4>
+                            <p>Your one-time link has been validated. You're being redirected to your profile page.</p>
+                            <div class="mt-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span class="ms-2">Redirecting...</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            <h4>Link Validation Failed</h4>
+                            <p>@Model.ErrorMessage</p>
+                        </div>
+                        <div class="mt-3">
+                            <a href="/" class="btn btn-primary">Return to Home</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.IsValid)
+{
+    <script>
+        // Redirect after a short delay
+        setTimeout(function() {
+            window.location.href = '/EditProfile?userId=@Model.UserId';
+        }, 3000);
+    </script>
+}

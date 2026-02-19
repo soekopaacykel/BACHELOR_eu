@@ -1,0 +1,329 @@
+@page "/Deleted"
+@model CVAPI.Pages.DeletedModel
+
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deleted</title>
+    <link rel="stylesheet" href="~/CSS/Global.css">
+    <link rel="stylesheet" href="~/CSS/Deleted.css?v=@DateTime.Now.Ticks">
+    <link rel="stylesheet" href="~/CSS/alert.css">
+    <link rel="stylesheet" href="~/CSS/confirm.css">
+    <script src="~/JS/auth.js"></script>
+    <script src="~/JS/menuAuth.js"></script>
+</head>
+<body>
+    <!-- Alert Modal -->
+    <div id="alertModal" class="alert-modal">
+        <div class="alert-modal-content">
+            <span class="close-modal" onclick="closeAlertModal()">&times;</span>
+            <div class="alert-modal-header" id="alertHeader">Information</div>
+            <div class="alert-modal-message" id="alertMessage"></div>
+            <div class="alert-modal-buttons">
+                <button type="button" class="alert-modal-button" id="alertButton" onclick="closeAlertModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <span class="close-modal" onclick="closeConfirmModal()">&times;</span>
+            <div class="confirm-modal-header" id="confirmHeader">Confirm Action</div>
+            <div class="confirm-modal-message" id="confirmMessage"></div>
+            <div class="confirm-modal-buttons">
+                <button type="button" class="confirm-modal-button cancel" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="confirm-modal-button confirm" id="confirmButton" onclick="confirmAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="userInfoContainer" class="user-info-container" style="position: fixed !important; top: 40px !important; right: 10px !important; background: white !important; padding: 12px 20px !important; border-radius: 8px !important; cursor: pointer !important; transition: all 0.3s ease !important; font-size: 0.9rem !important; color: #00534C !important; z-index: 1000 !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; min-width: 80px !important; max-width: 90px;">
+        <span>Logged in as</span>
+        <span class="user-email" id="userEmail" style="font-weight: 600 !important; color: #00855A !important;">@Model.UserEmail</span>
+    </div>
+    <!-- Top Menu -->
+    <div class="content-container">
+        <div class="header-bar">
+            <div class="header-logo">
+                <a href="/">
+                    <img src="~/Images/BEPALogo.png" alt="Logo" width="100" />
+                </a>
+            </div>
+            <div class="header-title"></div>
+            <div class="consultant-menu-bar">
+                <a href="/applicants" class="menu-item">Applicants</a>
+                <a href="/consultants" class="menu-item">Consultants</a>
+                <a href="/newprofile" class="menu-item-add">Add New</a>
+                <a href="/newmanager" id="admin-link" class="menu-item-add" style="display:none;">
+                    Admin
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="margin-left: 4px;">
+                        <path d="M12 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm6-7h-1V7a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2ZM9 7a3 3 0 1 1 6 0v3H9V7Zm9 13H6v-8h12v8Z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+        <div class="back-button-container">
+            <a href="javascript:history.back()" class="back-button">
+                <span class="back-icon">&#10216;</span> <span class="back-text">Back</span>
+            </a>
+        </div>
+        <div class="main-container">
+            <div class="deleted-list" style="margin-top:20px;">
+                <h1>Profiles Deleted in the Last Month</h1>
+                @if (Model.RecentlyDeletedUsers != null && Model.RecentlyDeletedUsers.Any())
+                {
+                    <table class="deleted-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Date Deleted</th>
+                                <th>Phone</th>
+                                <th>City</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var consultant in Model.RecentlyDeletedUsers)
+                        {
+                            <tr>
+                                <td>@consultant.FirstName @consultant.LastName</td>
+                                <td>@consultant.Email</td>
+                                <td>
+                                    @{
+                                        var dateAdded = (consultant is CVAPI.Models.Consultant c) ? c.DateAdded
+                                            : (consultant is CVAPI.Models.Applicant a) ? a.DateAdded
+                                            : (DateTime?)null;
+                                    }
+                                    @(dateAdded.HasValue ? dateAdded.Value.ToString("yyyy-MM-dd") : "")
+                                </td>
+                                <td>@consultant.Phone</td>
+                                <td>@consultant.City</td>
+                                <td>
+                                    <button class="restore-btn" onclick="restoreUser('@consultant.UserId')">Restore</button>
+                                    <button class="delete-btn" style="margin-left: 8px;" onclick="deleteUser('@consultant.UserId')">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p>No deleted profiles found in the last month.</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div style="text-align: center; margin-bottom: 20px; color: #00534C;">
+        <span>Logged in as </span>
+        <span id="userEmail"></span>
+    </div>
+    
+    <script>
+function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : undefined;
+}
+const DEBUG = true;
+document.addEventListener('DOMContentLoaded', function() {
+    if (DEBUG) console.debug('[DEBUG] Deleted page script loaded');
+    
+    // Admin-only access check for Deleted page
+    if (!window.authManager || !window.authManager.isAuthenticated()) {
+        console.log('[DELETED] User not authenticated, redirecting to login');
+        window.location.href = '/';
+        return;
+    }
+    
+    const userRole = window.authManager.getUserRole();
+    console.log('[DELETED] User role:', userRole, 'Type:', typeof userRole);
+    
+    // Check if user has Admin role (role "3" or "Admin")
+    if (userRole !== '3' && userRole !== 'Admin') {
+        console.log('[DELETED] Access denied. User role', userRole, 'is not Admin');
+        showAlert('Access Denied', 'This page is only accessible to Administrators.', 'error');
+        window.location.href = '/Consultants';
+        return;
+    }
+    
+    console.log('[DELETED] Admin access granted');
+    
+    // User email display is now handled by auth.js, but add backup
+    setTimeout(() => {
+        const userEmail = localStorage.getItem('userEmail');
+        const userEmailElement = document.getElementById('userEmail');
+        console.debug('[DEBUG] Backup email display check:', {
+            userEmail: userEmail,
+            element: !!userEmailElement,
+            currentText: userEmailElement?.textContent
+        });
+        
+        if (userEmailElement && userEmail && !userEmailElement.textContent) {
+            userEmailElement.textContent = userEmail;
+            console.debug('[DEBUG] Applied backup email display:', userEmail);
+        }
+    }, 100);
+    
+    var userInfo = document.getElementById('userInfoContainer') || document.getElementById('userEmail')?.parentElement;
+    if (userInfo) {
+        userInfo.style.cursor = 'pointer';
+        userInfo.addEventListener('click', function() {
+            setTimeout(function() {
+                window.location.href = '/PasswordChange';
+            }, 200);
+        });
+        if (DEBUG) console.debug('[DEBUG] userInfoContainer click handler with delay attached');
+    }
+});
+
+async function restoreUser(userId) {
+    showConfirm(
+        'Restore User',
+        'Are you sure you want to restore this user?',
+        'success',
+        async () => {
+            try {
+                const jwt = localStorage.getItem('jwt_token');
+                if (DEBUG) console.debug('[DEBUG] restoreUser called with userId:', userId);
+                if (DEBUG) console.debug('[DEBUG] JWT token:', jwt);
+                const payload = { userId: userId };
+                if (DEBUG) console.debug('[DEBUG] Request payload:', payload);
+                const response = await fetch('/api/user/DK/restore', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {})
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (DEBUG) console.debug('[DEBUG] Fetch response:', response);
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const text = await response.text();
+                    if (DEBUG) console.error('[DEBUG] Restore failed. Status:', response.status, 'Body:', text);
+                    showAlert('Failed', 'Failed to restore user.', 'error');
+                }
+            } catch (err) {
+                if (DEBUG) console.error('[DEBUG] Exception in restoreUser:', err);
+                showAlert('Error', 'Error restoring user.', 'error');
+            }
+        }
+    );
+}
+
+async function deleteUser(userId) {
+    showConfirm(
+        'Permanently Delete User',
+        'Are you sure you want to permanently delete this user? This action cannot be undone.',
+        'danger',
+        async () => {
+            try {
+                const jwt = localStorage.getItem('jwt_token');
+                if (DEBUG) console.debug('[DEBUG] deleteUser called with userId:', userId);
+                if (DEBUG) console.debug('[DEBUG] JWT token:', jwt);
+                const payload = { userId: userId };
+                if (DEBUG) console.debug('[DEBUG] Request payload:', payload);
+                const response = await fetch('/api/user/DK/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {})
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (DEBUG) console.debug('[DEBUG] Fetch response:', response);
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const text = await response.text();
+                    if (DEBUG) console.error('[DEBUG] Delete failed. Status:', response.status, 'Body:', text);
+                    showAlert('Failed', 'Failed to delete user.', 'error');
+                }
+            } catch (err) {
+                if (DEBUG) console.error('[DEBUG] Exception in deleteUser:', err);
+                showAlert('Error', 'Error deleting user.', 'error');
+            }
+        }
+    );
+}
+
+// Modal helper functions
+let confirmCallback = null;
+
+function showAlert(title, message, type = 'info', callback = null) {
+    const modal = document.getElementById('alertModal');
+    const header = document.getElementById('alertHeader');
+    const messageEl = document.getElementById('alertMessage');
+    const button = document.getElementById('alertButton');
+    
+    header.textContent = title;
+    header.className = `alert-modal-header ${type}`;
+    messageEl.textContent = message;
+    button.className = `alert-modal-button ${type}`;
+    
+    modal.style.display = 'block';
+    
+    if (callback) {
+        button.onclick = () => {
+            closeAlertModal();
+            callback();
+        };
+    } else {
+        button.onclick = closeAlertModal;
+    }
+}
+
+function closeAlertModal() {
+    document.getElementById('alertModal').style.display = 'none';
+}
+
+function showConfirm(title, message, type = 'info', onConfirm = null) {
+    const modal = document.getElementById('confirmModal');
+    const header = document.getElementById('confirmHeader');
+    const messageEl = document.getElementById('confirmMessage');
+    const confirmBtn = document.getElementById('confirmButton');
+    
+    header.textContent = title;
+    header.className = `confirm-modal-header ${type}`;
+    messageEl.textContent = message;
+    confirmBtn.className = `confirm-modal-button ${type === 'danger' ? 'danger' : 'confirm'}`;
+    
+    modal.style.display = 'block';
+    confirmCallback = onConfirm;
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+    confirmCallback = null;
+}
+
+function confirmAction() {
+    if (confirmCallback) {
+        confirmCallback();
+    }
+    closeConfirmModal();
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const alertModal = document.getElementById('alertModal');
+    const confirmModal = document.getElementById('confirmModal');
+    if (event.target === alertModal) {
+        closeAlertModal();
+    }
+    if (event.target === confirmModal) {
+        closeConfirmModal();
+    }
+}
+</script>
+</body>
+</html>

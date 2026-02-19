@@ -1,0 +1,459 @@
+@page "/Newmanager"
+@model CVAPI.Pages.ManagersModel
+
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Management</title>
+    <link rel="stylesheet" href="~/CSS/Global.css">
+    <link rel="stylesheet" href="~/CSS/NewManager.css?v=@DateTime.Now.Ticks">
+    <link rel="stylesheet" href="~/CSS/alert.css">
+    <link rel="stylesheet" href="~/CSS/confirm.css">
+    <script src="~/JS/auth.js"></script>
+    <script src="~/JS/menuAuth.js"></script>
+</head>
+<body>
+    <!-- Alert Modal -->
+    <div id="alertModal" class="alert-modal">
+        <div class="alert-modal-content">
+            <span class="close-modal" onclick="closeAlertModal()">&times;</span>
+            <div class="alert-modal-header" id="alertHeader">Information</div>
+            <div class="alert-modal-message" id="alertMessage"></div>
+            <div class="alert-modal-buttons">
+                <button type="button" class="alert-modal-button" id="alertButton" onclick="closeAlertModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <span class="close-modal" onclick="closeConfirmModal()">&times;</span>
+            <div class="confirm-modal-header" id="confirmHeader">Confirm Action</div>
+            <div class="confirm-modal-message" id="confirmMessage"></div>
+            <div class="confirm-modal-buttons">
+                <button type="button" class="confirm-modal-button cancel" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="confirm-modal-button confirm" id="confirmButton" onclick="confirmAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="userInfoContainer" class="user-info-container" style="position: fixed !important; top: 40px !important; right: 10px !important; background: white !important; padding: 12px 20px !important; border-radius: 8px !important; cursor: pointer !important; transition: all 0.3s ease !important; font-size: 0.9rem !important; color: #00534C !important; z-index: 1000 !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; min-width: 80px !important; max-width: 90px;">
+        <span>Logged in as</span>
+        <span class="user-email" id="userEmail" style="font-weight: 600 !important; color: #00855A !important;">@Model.UserEmail</span>
+    </div>
+    <!-- Top Menu -->
+        <div class="content-container">
+    <div class="header-bar">
+        <div class="header-logo">
+            <a href="/">
+                    <img src="~/Images/BEPALogo.png" alt="Logo" width="100" />
+                </a>
+            </div>
+            <div class="header-title"></div>
+            <div class="consultant-menu-bar">
+                <a href="/applicants" class="menu-item">Applicants</a>
+                <a href="/consultants" class="menu-item">Consultants</a>
+                <a href="/newprofile" class="menu-item-add">Add New</a>
+                <a href="/newmanager" id="admin-link" class="menu-item-add">
+                    Admin
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="currentColor" 
+                        width="16" height="16" 
+                        style="margin-left: 4px;">
+                        <path d="M12 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm6-7h-1V7a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v8a2 
+                                2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2ZM9 7a3 3 0 1 1 6 0v3H9V7Zm9 13H6v-8h12v8Z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+        
+        <div class="back-button-container">
+            <a href="javascript:history.back()" class="back-button">
+                <span class="back-icon">&#10216;</span> <span class="back-text">Back</span>
+            </a>
+        </div>
+
+        <!-- Single main-container instead of nested ones -->
+        <div class="main-container">
+            
+            <!-- Left Column -->
+            <div class="left-column">
+                <button id="toggleFormButton">
+                    Create New Manager
+                </button>
+                
+                <form id="createManagerForm" method="post" asp-page-handler="CreateManager" style="display: none;">
+                
+                    <div class="form-group">
+                        <label asp-for="NewManager.Initial">Initials</label>
+                        <input asp-for="NewManager.Initial" id="adminInitials" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.FirstName">First Name</label>
+                        <input asp-for="NewManager.FirstName" id="firstName" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.LastName">Last Name</label>
+                        <input asp-for="NewManager.LastName" id="lastName" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.Email">Email</label>
+                        <input asp-for="NewManager.Email" id="email" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.Phone">Phone</label>
+                        <input asp-for="NewManager.Phone" id="phone" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.Address">Address</label>
+                        <input asp-for="NewManager.Address" id="address" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.City">City</label>
+                        <input asp-for="NewManager.City" id="city" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.PostalCode">Postal Code</label>
+                        <input asp-for="NewManager.PostalCode" id="postalCode" class="form-control" required type="number" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.Country">Country</label>
+                        <input asp-for="NewManager.Country" id="country" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewManager.Password">Password</label>
+                        <input asp-for="NewManager.Password" id="password" type="password" class="form-control" required />
+                    </div>
+                    <div class="submit-button-container">
+                        <button type="button" onclick="submitManager()">Submit</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-column">
+                <button id="DeletedButton" class="Deletebutton" onclick="window.location.href='/Deleted'">
+                    Deleted Profiles
+                </button>
+                <h2 class="main-heading">Managers</h2>
+                @if (Model.ExistingManagers != null && Model.ExistingManagers.Any())
+                {
+                    <div class="manager-list">
+                        @foreach (var manager in Model.ExistingManagers)
+                        {
+                            <div class="manager-card">
+                                <h3>@manager.FirstName @manager.LastName</h3>
+                                <p>@manager.Email</p>
+                                <p>@manager.Phone</p>
+                                <div class="actions">
+                                    <button type="button" class="btn btn-warning" onclick="UpdatePassword('@manager.UserId', this)">
+                                        Password
+                                    </button>
+                                    <form method="post">
+                                        <input type="hidden" asp-for="SelectedManagerId" value="@manager.UserId" />
+                                        <button type="submit" asp-page-handler="DeleteManager" class="btn btn-danger" 
+                                                onclick="return confirmDelete('manager', '@manager.UserId', '@manager.FirstName @manager.LastName')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="no-results">No managers found.</p>
+                }
+
+                <h2 class="main-heading" style="margin-top: 40px;">Admins</h2>
+                @if (Model.ExistingAdmins != null && Model.ExistingAdmins.Any())
+                {
+                    <div class="admin-list">
+                        @foreach (var admin in Model.ExistingAdmins)
+                        {
+                            <div class="admin-card">
+                                <h3>@admin.FirstName @admin.LastName</h3>
+                                <p>@admin.Email</p>
+                                <p>@admin.Phone</p>
+                                <div class="actions">
+                                    <button type="button" class="btn btn-warning" onclick="UpdatePassword('@admin.UserId', this)">
+                                        Password
+                                    </button>
+                                    <form method="post">
+                                        <input type="hidden" asp-for="SelectedManagerId" value="@admin.UserId" />
+                                        <button type="submit" asp-page-handler="DeleteAdmin" class="btn btn-danger" 
+                                                onclick="return confirmDelete('admin', '@admin.UserId', '@admin.FirstName @admin.LastName')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="no-results">No admins found.</p>
+                }
+            </div>
+        </div>
+    </div>  
+    <div style="text-align: center; margin-bottom: 20px; color: #00534C;">
+        <span>Logged in as </span>
+        <span id="userEmail"></span>
+    </div>
+    <script>
+        if (typeof DEBUG === 'undefined' || DEBUG) {
+    console.debug("[DEBUG] Newmanager.cshtml script loaded!");
+    // User email display is now handled by auth.js, but add backup
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize authentication first
+        if (typeof initializeAuth === 'function') {
+            initializeAuth();
+        }
+        
+        // Admin-only access check for Newmanager page
+        if (!window.authManager || !window.authManager.isAuthenticated()) {
+            console.log('[NEWMANAGER] User not authenticated, redirecting to login');
+            window.location.href = '/';
+            return;
+        }
+        
+        const userRole = window.authManager.getUserRole();
+        console.log('[NEWMANAGER] User role:', userRole, 'Type:', typeof userRole);
+        
+        // Check if user has Admin role (role "3" or "Admin")
+        if (userRole !== '3' && userRole !== 'Admin') {
+            console.log('[NEWMANAGER] Access denied. User role', userRole, 'is not Admin');
+            showAlert('Access Denied', 'This page is only accessible to Administrators.', 'error');
+            window.location.href = '/Consultants';
+            return;
+        }
+        
+        console.log('[NEWMANAGER] Admin access granted');
+        
+        // Backup email display if auth.js didn't work
+        setTimeout(() => {
+            const userEmail = localStorage.getItem('userEmail');
+            const userEmailElement = document.getElementById('userEmail');
+            console.debug('[DEBUG] Backup email display check:', {
+                userEmail: userEmail,
+                element: !!userEmailElement,
+                currentText: userEmailElement?.textContent
+            });
+            
+            if (userEmailElement && userEmail && !userEmailElement.textContent) {
+                userEmailElement.textContent = userEmail;
+                console.debug('[DEBUG] Applied backup email display:', userEmail);
+            }
+        }, 100);
+        // Always attach click handler for password change redirect
+        var userInfo = document.getElementById('userInfoContainer');
+        if (userInfo) {
+            userInfo.style.cursor = 'pointer';
+            userInfo.addEventListener('click', function() {
+                setTimeout(function() {
+                    window.location.href = '/PasswordChange';
+                }, 200); // 200ms delay to allow cookies to propagate
+            });
+            console.debug('[DEBUG] userInfoContainer click handler attached');
+        } else {
+            console.debug('[DEBUG] userInfoContainer element not found');
+        }
+    });
+}
+        // JavaScript to toggle the form visibility
+        document.getElementById("toggleFormButton").addEventListener("click", function () {
+            const form = document.getElementById("createManagerForm");
+            if (form.style.display === "none") {
+                form.style.display = "block";
+            } else {
+                form.style.display = "none";
+            }
+        });
+
+        async function submitManager() {
+            console.log("[DEBUG] submitManager called.");
+
+            // Saml data fra formularen
+            const manager = {
+                Id: "", // Backend håndterer generering af GUID, hvis dette er tomt
+                UserId: "", // Backend håndterer generering af GUID, hvis dette er tomt
+                AdminInitials: document.getElementById("adminInitials")?.value || "",
+                FirstName: document.getElementById("firstName")?.value || "",
+                LastName: document.getElementById("lastName")?.value || "",
+                Email: document.getElementById("email")?.value || "",
+                Phone: document.getElementById("phone")?.value || "",
+                Address: document.getElementById("address")?.value || "",
+                City: document.getElementById("city")?.value || "",
+                PostalCode: document.getElementById("postalCode")?.value || "",
+                Country: document.getElementById("country")?.value || "",
+                Password: document.getElementById("password")?.value || "",
+                ProfilePicture: "" // Placeholder
+            };
+
+            console.log("[DEBUG] Manager data before sending:", JSON.stringify(manager, null, 2));
+
+            try {
+                // Send data til backend via fetch
+                const response = await fetch("/api/user/DK/create-manager", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                    body: JSON.stringify(manager),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Server response (${response.status}):`, errorText);
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const responseBody = await response.json();
+                console.log("[DEBUG] Manager successfully created:", responseBody);
+
+                // Genindlæs siden eller omdiriger til en succes-side
+                window.location.reload(); // Genindlæs siden for at vise opdateret liste over managers
+            } catch (error) {
+                console.error('Error submitting manager:', error);
+                showAlert('Error', 'An error occurred while submitting the manager. Please try again.', 'error');
+            }
+        }
+
+        async function UpdatePassword(userId, buttonElement) {
+            console.log("[DEBUG] UpdatePassword called with UserId:", userId);
+
+            const newPassword = prompt("Enter the new password:");
+            if (!newPassword) {
+                showAlert('Canceled', 'Password update canceled.', 'warning');
+                return;
+            }
+
+            try {
+                console.log("[DEBUG] Sending password update request to the server.");
+                const response = await fetch(`/api/user/DK/update-password`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                    body: JSON.stringify({ userId, newPassword }),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`[ERROR] Server response (${response.status}):`, errorText);
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                showAlert('Success', 'Password updated successfully!', 'success');
+                console.log("[DEBUG] Password updated successfully.");
+            } catch (error) {
+                console.error("[ERROR] Error updating password:", error);
+                showAlert('Error', 'An error occurred while updating the password. Please try again.', 'error');
+            }
+        }
+
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+            return match ? decodeURIComponent(match[1]) : undefined;
+        }
+        
+        // Modal helper functions
+        let confirmCallback = null;
+        let deleteForm = null;
+
+        function showAlert(title, message, type = 'info', callback = null) {
+            const modal = document.getElementById('alertModal');
+            const header = document.getElementById('alertHeader');
+            const messageEl = document.getElementById('alertMessage');
+            const button = document.getElementById('alertButton');
+            
+            header.textContent = title;
+            header.className = `alert-modal-header ${type}`;
+            messageEl.textContent = message;
+            button.className = `alert-modal-button ${type}`;
+            
+            modal.style.display = 'block';
+            
+            if (callback) {
+                button.onclick = () => {
+                    closeAlertModal();
+                    callback();
+                };
+            } else {
+                button.onclick = closeAlertModal;
+            }
+        }
+
+        function closeAlertModal() {
+            document.getElementById('alertModal').style.display = 'none';
+        }
+
+        function showConfirm(title, message, type = 'info', onConfirm = null) {
+            const modal = document.getElementById('confirmModal');
+            const header = document.getElementById('confirmHeader');
+            const messageEl = document.getElementById('confirmMessage');
+            const confirmBtn = document.getElementById('confirmButton');
+            
+            header.textContent = title;
+            header.className = `confirm-modal-header ${type}`;
+            messageEl.textContent = message;
+            confirmBtn.className = `confirm-modal-button ${type === 'danger' ? 'danger' : 'confirm'}`;
+            
+            modal.style.display = 'block';
+            confirmCallback = onConfirm;
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            confirmCallback = null;
+            deleteForm = null;
+        }
+
+        function confirmAction() {
+            if (confirmCallback) {
+                confirmCallback();
+            } else if (deleteForm) {
+                deleteForm.submit();
+            }
+            closeConfirmModal();
+        }
+
+        function confirmDelete(type, userId, name) {
+            event.preventDefault();
+            deleteForm = event.target.closest('form');
+            showConfirm(
+                `Delete ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+                `Are you sure you want to delete ${name}? This action cannot be undone.`,
+                'danger'
+            );
+            return false;
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const alertModal = document.getElementById('alertModal');
+            const confirmModal = document.getElementById('confirmModal');
+            if (event.target === alertModal) {
+                closeAlertModal();
+            }
+            if (event.target === confirmModal) {
+                closeConfirmModal();
+            }
+        }
+        
+    </script>
+</body>
+</html>

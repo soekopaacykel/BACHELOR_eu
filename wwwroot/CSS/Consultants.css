@@ -1,0 +1,347 @@
+html, body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #00534C, #00855A);
+    background-attachment: fixed; /* This prevents the gradient from repeating */
+}
+
+.content-container {
+    background-color: white;
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    padding-top: 0px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    position: relative;
+}
+
+/* -- Menu Bar -- */
+.consultant-menu-bar {
+    display: flex;
+    gap: 20px;
+    margin-right: 0px;
+}
+
+#admin-link {
+    /* Giv det et specielt udseende, fx: */
+    background-color: #00534C !important;
+    width: 100px;
+    display: inline-flex !important;
+    transition: background-color 0.3s ease;
+
+}
+
+#admin-link:hover {
+    background-color: #f1f1f1 !important;
+    color: #00855A !important;
+}
+
+.consultant-menu-bar a {
+    display: flex;
+    justify-content: center;
+    /* Centrerer elementerne horisontalt */
+    align-items: center;
+    /* Centrerer elementerne vertikalt */
+    color: #00534C;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+}
+
+.consultant-menu-bar a:hover {
+    background-color: #f1f1f1;
+    color: #00855A;
+}
+
+/* -- Menu Item Add Styling -- */
+.consultant-menu-bar .menu-item-add {
+    text-decoration: none;
+    color: white;
+    background-color: #00855A;
+    font-weight: 600;
+    padding: -5px 10px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+    margin-left: auto;
+    /* Centrering horisontalt */
+    margin-right: auto;
+    /* Centrering horisontalt */
+}
+
+.back-button {
+    top: 160px;
+    left: 50px;
+    font-size: 1.2rem;
+    /* Mindre tekst */
+    font-weight: normal;
+    color: #000000;
+    text-decoration: none;
+    background: none;
+    border: none;
+    position: absolute;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    z-index: 9999;
+    /* Sørg for at knappen er øverst */
+    padding: 5px 10px;
+    /* Giv lidt plads omkring knappen */
+}
+
+.back-icon {
+    font-size: 2.1rem;
+    /* Større pil */
+    margin-right: 5px;
+    /* Afstand mellem pil og tekst */
+}
+
+.back-button:hover {
+    color: #00855A;
+    /* Hover farve for både pil og tekst */
+}
+
+.back-button:hover .back-icon {
+    color: inherit;
+    /* Sørg for at pilens farve ændrer sig ved hover */
+}
+
+.back-button:hover .back-text {
+    color: inherit;
+    /* Sørg for at tekstens farve ændrer sig ved hover */
+}
+
+
+.search-container {
+    margin-top: 60px;
+    margin-bottom: 20px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    /* Vertikal centrering */
+}
+
+
+/* Search Bar Styling */
+.search-bar {
+    display: block;
+    margin: 0 auto;
+    width: 50%;
+    max-width: 700px;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #575756;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: border-color 0.3s ease;
+    position: relative;
+}
+
+/* Sørger for at #searchTags vises under søgefeltet */
+#searchTags {
+    margin-top: 10px;
+    /* Afstand mellem søgefeltet og tagsene */
+    display: flex;
+    flex-wrap: wrap;
+    /* Sørger for at tagsene bryder linje ved behov */
+    gap: 5px;
+    /* Giver lidt afstand mellem tagsene */
+    width: 100%;
+    /* Fylder hele bredden af containeren */
+    max-width: 700px;
+    /* Maksimal bredde (samme som søgefeltet) */
+    margin-left: auto;
+    /* Centrerer tagsene horisontalt */
+    margin-right: auto;
+    /* Centrerer tagsene horisontalt */
+    position: absolute;
+    top: 100%;
+    /* Sørger for, at tagsene er under søgefeltet */
+    left: 0;
+}
+
+/* Suggestions dropdown */
+.suggestions-container {
+    position: absolute;
+    /* Gør at dropdownen kan ligge over indholdet */
+    top: 100%;
+    /* Placer dropdownen lige under søgefeltet */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    max-width: 700px;
+    border: 1px solid #575756;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    /* Sørger for at den ligger ovenpå andet indhold */
+    display: none;
+    /* Skjult, indtil der er noget at vise */
+}
+
+.level-dropdown {
+    height: 46px;
+    padding: 5px;
+    font-size: 1rem;
+    border: 1px solid #575756;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background-color: white;
+    color: #00534C;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+    width: 100px;
+    margin-left: -200px;
+    margin-right: 250px;
+    position: absolute;
+    /* Sørg for, at dropdownen er absolut positioneret */
+    top: 0;
+    /* Dette flytter dropdownen til toppen af dens container */
+    left: 95%;
+    transform: translateX(-50%);
+    /* Centrerer den horisontalt */
+}
+
+
+/* Hover-effekt for dropdown */
+.level-dropdown:hover {
+    border-color: #00855A;
+}
+
+
+
+.suggestion-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+
+.suggestion-item:hover {
+    background-color: #f1f1f1;
+}
+
+.search-bar:focus {
+    border-color: #00855A;
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 133, 90, 0.5);
+    /* Grøn fokusfarve */
+}
+
+/* Consultant Card Styling */
+.consultant-card {
+    background-color: #F7FAF7;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Når Bepa er true */
+.Bepa-indicator-true {
+    background: linear-gradient(135deg, #00534C, #00855A);
+    /* Grøn baggrund */
+    color: white;
+    /* Hvid tekst */
+    font-weight: bold;
+    /* Fed skrift */
+    font-size: 10px;
+    /* Justeret fontstørrelse */
+    padding: 3px 6px;
+    /* Lidt padding for at gøre boksen større */
+    border-radius: 8px;
+    /* Afrundede hjørner */
+    display: inline-block;
+    /* Sørger for, at elementet kun fylder den nødvendige plads */
+    text-align: center;
+    /* Centrerer teksten */
+    margin-left: 6px;
+    /* Lidt afstand mellem navnet og BEPA */
+    margin-right: -3px;
+}
+
+
+.consultant-rating-stars {
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.consultant-star-icon {
+    width: 24px;
+    height: 24px;
+    fill: #ddd;
+    /* Standard tomme stjerner */
+    transition: fill 0.2s;
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
+}
+
+.consultant-star-filled {
+    fill: #FFD700;
+    /* Fyldte stjerner med gylden farve */
+    filter: drop-shadow(0 0 1px rgba(107, 109, 51, 0.6));
+}
+
+.consultant-star-empty {
+    fill: #ddd;
+    /* Tomme stjerner */
+}
+
+
+.no-results {
+    text-align: center;
+    color: #575756;
+}
+
+.sort-dropdown-container {
+    position: absolute;
+    width: 100px;
+    right: 80px;
+    top: 0px;
+}
+
+/* Hide competencies by default */
+.applicant-card ul li,
+.consultant-card ul li {
+    display: none;
+    /* Hidden by default */
+}
+
+/* Show competencies when they match search */
+.applicant-card ul li.show-competency,
+.consultant-card ul li.show-competency {
+    display: block;
+    /* Show when class is added */
+}
+
+.sort-dropdown {
+    padding: 8px 8px;
+    font-size: 1rem;
+    height: 46px;
+    width: 140px;
+    border-radius: 10px;
+    border: 1px solid #575756;
+    background-color: white;
+    color: #00534C;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.sort-dropdown:hover {
+    border-color: #00855A;
+}
+
+/* Remove these styles if they exist */
+.user-info-container,
+.user-email {
+    /* Remove any styles here */
+}

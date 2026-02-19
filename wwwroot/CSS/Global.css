@@ -1,0 +1,150 @@
+/* -- Global Styles -- */
+ body {
+    font-family: 'Helvetica Neue', sans-serif;
+    background: linear-gradient(135deg, #00534C, #00855A);
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.header-bar {
+    background: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #00534C;
+    border-bottom: 1px solid #ddd;
+    width: 100%;
+    max-width: 1160px;
+    margin: 20px auto 0;
+    position: relative;
+    border-radius: 10px 10px 0 0;
+}
+
+
+
+.back-button {
+   position: absolute;
+   top: 119px;
+   left: 51px;
+   font-size: 1.2rem;
+   font-weight: normal;
+   color: #000;
+   background: none;
+   border: none;
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   z-index: 1000;
+   padding: 5px 10px;
+}
+
+.back-button:hover,
+.back-button:hover .back-icon,
+.back-button:hover .back-text {
+   color: #00855A;
+}
+
+
+
+ 
+/* Nulstil input range styling */
+input[type="range"] {
+   -webkit-appearance: none;
+   -moz-appearance: none;
+   appearance: none;
+   background: transparent;
+   border: none;
+   outline: none;
+   width: 100%;
+   height: 10px; /* Sliderens højde */
+   background-color: #e0e0e0;
+   border-radius: 5px;
+   transition: background 0.3s ease;
+   box-shadow: none;
+   margin: 0;
+   margin-top: 5px;
+   padding: 0;
+}
+
+/* Styling af slider (track) */
+input[type="range"]::-webkit-slider-runnable-track {
+   height: 10px; /* Samme højde som slideren */
+   background-color: #e0e0e0;
+   border-radius: 5px;
+   border: none; /* Fjerner standardborderen */
+   box-shadow: none;
+}
+
+input[type="range"]::-moz-range-track {
+   height: 10px; /* Samme højde som slideren */
+   background-color: #e0e0e0;
+   border-radius: 5px;
+   border: none; /* Fjerner standardborderen */
+   box-shadow: none;
+}
+
+input[type="range"]::-ms-track {
+   background-color: #e0e0e0;
+   border: none;
+   height: 10px; /* Samme højde som slideren */
+   width: 100%;
+   border-radius: 5px;
+   box-shadow: none;
+}
+
+/* Styling af slider thumb */
+input[type="range"]::-webkit-slider-thumb {
+   -webkit-appearance: none;
+   appearance: none;
+   width: 20px; /* Størrelsen på thumb */
+   height: 20px; /* Størrelsen på thumb */
+   background-color: #00855A; /* Grøn farve */
+   border-radius: 50%;
+   cursor: pointer;
+   border: none;
+   margin-top: -5px; /* Justerer for at centere thumb på track'en */
+   transition: background-color 0.3s ease;
+}
+
+input[type="range"]::-moz-range-thumb {
+   width: 20px; /* Størrelsen på thumb */
+   height: 20px; /* Størrelsen på thumb */
+   background-color: #00855A; /* Grøn farve */
+   border-radius: 50%;
+   cursor: pointer;
+   border: none;
+   margin-top: -5px; /* Justerer for at centere thumb på track'en */
+}
+
+input[type="range"]::-ms-thumb {
+   width: 20px; /* Størrelsen på thumb */
+   height: 20px; /* Størrelsen på thumb */
+   background-color: #00855A; /* Grøn farve */
+   border-radius: 50%;
+   cursor: pointer;
+   border: none;
+   margin-top: -5px; /* Justerer for at centere thumb på track'en */
+}
+
+/* Styling når slideren er deaktiveret */
+input[type="range"]:disabled {
+   background-color: #ccc; /* Track farve når slideren er deaktiveret */
+}
+
+input[type="range"]:disabled::-webkit-slider-thumb {
+   background-color: #bbb; /* Thumb farve når slideren er deaktiveret */
+}
+
+input[type="range"]:disabled::-moz-range-thumb {
+   background-color: #bbb;
+}
+
+input[type="range"]:disabled::-ms-thumb {
+   background-color: #bbb;
+}
+

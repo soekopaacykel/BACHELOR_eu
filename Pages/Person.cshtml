@@ -1,0 +1,2645 @@
+@page "/Details/{Region}/{UserId}"
+@using CVAPI.Models
+@model CVAPI.Pages.PersonModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.4/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/CSS/Person.css">
+    <link rel="stylesheet" href="~/CSS/HeaderEdit.css">
+    <link rel="stylesheet" href="~/CSS/Global.css">
+    <link rel="stylesheet" href="~/CSS/alert.css">
+    <link rel="stylesheet" href="~/CSS/confirm.css">
+    <link rel="stylesheet" href="~/CSS/error.css">
+    <script>
+        // Debug profile picture loading
+        document.addEventListener('DOMContentLoaded', function() {
+            const profilePictureValue = '@Html.Raw(Model.Consultant.ProfilePicture)';
+            console.log('Profile Picture URL from Model:', profilePictureValue);
+            console.log('Profile Picture is null or empty:', !profilePictureValue || profilePictureValue === '');
+            console.log('Profile Picture length:', profilePictureValue ? profilePictureValue.length : 0);
+            
+            const profileImg = document.querySelector('.profile-picture');
+            if (profileImg) {
+                console.log('Profile image element found, src:', profileImg.src);
+                console.log('Image src equals default:', profileImg.src.includes('/Images/ProfilePic.jpg'));
+            } else {
+                console.log('Profile image element not found');
+            }
+        });
+    </script>
+    
+    <script src="~/JS/regionManager.js"></script>
+    <script src="~/JS/auth.js"></script>
+    <script src="~/JS/menuAuth.js"></script>
+    <script src="~/JS/login.js"></script>
+    <script src="~/JS/loadingSpinner.js"></script>
+    <script>
+        // Fallback function in case login.js doesn't load
+        window.getJwtTokenFromCookie = window.getJwtTokenFromCookie || function() {
+            if (window.localStorage) {
+                const token = localStorage.getItem('jwt_token');
+                console.log('[FALLBACK] JWT Token retrieved:', token ? 'Found' : 'Not found');
+                if (!token) {
+                    console.warn('[FALLBACK] JWT token not found. User may need to log in again.');
+                }
+                return token;
+            }
+            return null;
+        };
+        
+        // Check if login.js loaded successfully
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof getJwtTokenFromCookie !== 'function') {
+                console.error('[ERROR] login.js failed to load. Using fallback function.');
+            } else {
+                console.log('[SUCCESS] login.js loaded successfully.');
+            }
+            
+            // Test network connectivity for JS files in production
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                console.log('[DEPLOYMENT] Running in production environment');
+                
+                // Test if static files are accessible
+                fetch('/JS/login.js')
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error('[DEPLOYMENT ERROR] login.js not accessible:', response.status);
+                        } else {
+                            console.log('[DEPLOYMENT] Static files accessible');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[DEPLOYMENT ERROR] Failed to fetch login.js:', error);
+                    });
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <!-- Error Modal -->
+    <div id="errorModal" class="error-modal">
+        <div class="error-modal-content">
+            <span class="close-modal" onclick="closeErrorModal()">&times;</span>
+            <div class="error-modal-header">Validation Error</div>
+            <div class="error-modal-message" id="errorMessage"></div>
+            <ul class="error-list" id="errorList"></ul>
+            <div class="error-modal-buttons">
+                <button type="button" class="error-modal-button" onclick="closeErrorModal()">OK</button>
+            </div>
+        </div>
+    </div>
+<div id="userInfoContainer" class="user-info-container" style="position: fixed !important; top: 40px !important; right: 10px !important; background: white !important; padding: 12px 20px !important; border-radius: 8px !important; cursor: pointer !important; transition: all 0.3s ease !important; font-size: 0.9rem !important; color: #00534C !important; z-index: 1000 !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; min-width: 100px !important; max-width: 130px !important;">
+        <span>Logged in as</span>
+        <span class="user-email" id="userEmail" style="font-weight: 600 !important; color: #00855A !important;"></span>
+    </div>
+    
+    <!-- Alert Modal -->
+    <div id="alertModal" class="alert-modal">
+        <div class="alert-modal-content">
+            <span class="close-modal" onclick="closeAlertModal()">&times;</span>
+            <div class="alert-modal-header" id="alertHeader">Information</div>
+            <div class="alert-modal-message" id="alertMessage"></div>
+            <div class="alert-modal-buttons">
+                <button type="button" class="alert-modal-button" id="alertButton" onclick="closeAlertModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <span class="close-modal" onclick="closeConfirmModal()">&times;</span>
+            <div class="confirm-modal-header" id="confirmHeader">Confirm Action</div>
+            <div class="confirm-modal-message" id="confirmMessage"></div>
+            <div class="confirm-modal-buttons">
+                <button type="button" class="confirm-modal-button cancel" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="confirm-modal-button confirm" id="confirmButton" onclick="confirmAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="content-container">
+        <div class="header-bar">
+            <div class="header-logo">
+                <a href="/">
+                    <img src="~/Images/BEPALogo.png" alt="Logo" width="100" />
+                </a>
+            </div>
+            <div class="header-title"></div>
+            <div class="consultant-menu-bar">
+                <a href="/applicants" class="menu-item">Applicants</a>
+                <a href="/consultants" class="menu-item">Consultants</a>
+                <a href="/newprofile" class="menu-item-add">Add New</a>
+                <a href="/newmanager" id="admin-link" class="menu-item-add">
+  Admin
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       viewBox="0 0 24 24" 
+       fill="currentColor" 
+       width="16" height="16" 
+       style="margin-left: 4px;">
+    <path d="M12 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm6-7h-1V7a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2ZM9 7a3 3 0 1 1 6 0v3H9V7Zm9 13H6v-8h12v8Z"/>
+  </svg>
+</a>
+
+            </div>
+            
+        </div>
+        <a href="javascript:history.back()" class="back-button">
+            <span class="back-icon">&#10216;</span> <span class="back-text">Back</span>
+        </a>
+
+        <div class="consultant-header-bar">
+            <div class="profile-section" style="display: flex; flex-direction: column; align-items: center; margin-right: 20px; margin-top: 50px; position: relative;">
+                <img src="@(string.IsNullOrEmpty(Model.Consultant.ProfilePicture) ? "/Images/ProfilePic.jpg" : Model.Consultant.ProfilePicture)" 
+                     alt="Profile Picture" 
+                     class="profile-picture"
+                     onerror="this.src='/Images/ProfilePic.jpg'; console.log('Profile picture failed to load, using default');"
+                     onload="console.log('Profile picture loaded successfully:', this.src);" />
+
+                <!-- Edit button positioned below profile picture -->
+                <div class="profile-edit-button" style="position: absolute; top: 160px; left: 50%; transform: translateX(-50%); text-align: center;">
+                    <button id="toggleEditHeaderBtn" class="edit-button" onclick="toggleEditModeHeader()">
+                        <img src="~/Images/edit-icon.png" class="edit-icon" alt="Edit" style="width: 20px; height: 20px; vertical-align: middle; padding: 0;">
+                    </button>
+                </div>
+            </div>
+
+            <div class="consultant-header-info">
+                <!-- Display Mode -->
+                <div id="headerDisplayMode">
+                    <div class="status-buttons">
+                        @if (Model.Consultant.Bepa)
+                        {
+                            <p class="Bepa-indicator-true">BEPA</p>
+                        }
+                        else
+                        {
+                            <p class="Bepa-indicator"></p>
+                        }
+                        @if (Model.Consultant.Confirmed)
+                        {
+                            <p class="confirmed-indicator-true" style="margin-left: -6px; font-weight: 450;">Confirmed</p>
+                        }
+                        else
+                        {
+                            <p class="confirmed-indicator-false" style="margin-left: -6px; font-weight: 450;">Not Confirmed</p>
+                        }
+                    </div>
+
+                    <h2 class="consultant-name">
+                        @Model.Consultant.FirstName @Model.Consultant.LastName
+                    @if (Model.Consultant.IsAvailable)
+                    {
+                        <span class="availability-dot available" title="Available now"></span>
+                    }
+                    else if (Model.Consultant.AvailableInterval != null)
+                    {
+                        var interval = Model.Consultant.AvailableInterval.Value;
+                        string label = interval switch
+                        {
+                            7 => "1 week",
+                            14 => "2 weeks",
+                            30 => "1 month (4 weeks)",
+                            60 => "2 months",
+                            90 => "3 months or more",
+                            _ => $"{interval} days"
+                        };
+                        <span class="availability-dot available-interval" style="background-color: #007bff;" title="Available in @label"></span>
+                    }
+                    else if (Model.Consultant.AvailableWhen != null)
+                    {
+                        <span class="availability-dot unavailable" style="background-color: #dc3545;" title="Available from @Model.Consultant.AvailableWhen.Value.ToString("dd MMM yyyy")"></span>
+                    }
+                </h2>
+
+                <p class="user-role">@Model.UserRole.ToString()</p>
+
+                <p class="consultant-summary">@Html.Raw(Model.Consultant.Summary?.Replace("\n", "<br>") ?? "")</p>
+                </div>
+
+                <!-- Edit Mode -->
+                <div id="headerEditMode" class="header-edit-popup" style="display: none;">
+                    <div class="header-edit-popup-content">
+                        <span class="close-header-popup" onclick="toggleEditModeHeader()">&times;</span>
+                        <h3>Edit Consultant Information</h3>
+                        <form id="headerEditForm">
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            
+                            <div class="form-group">
+                                <label for="FirstName">First Name:</label>
+                                <input type="text" class="form-control" id="FirstName" name="FirstName" value="@Model.Consultant.FirstName" required />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="LastName">Last Name:</label>
+                                <input type="text" class="form-control" id="LastName" name="LastName" value="@Model.Consultant.LastName" required />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="UserRole">User Role:</label>
+                                <select class="form-control" id="UserRole" name="UserRole" required>
+                                    <option value="0" @(Model.Consultant.UserRole == CVAPI.Models.Role.Applicant ? "selected" : "")>Applicant</option>
+                                    <option value="1" @(Model.Consultant.UserRole == CVAPI.Models.Role.Consultant ? "selected" : "")>Consultant</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="AvailabilityStatus">Availability:</label>
+                                <select class="form-control" id="AvailabilityStatus" name="AvailabilityStatus" onchange="toggleAvailabilityOptions()" required>
+                                    <option value="available" @(Model.Consultant.IsAvailable ? "selected" : "")>Available Now</option>
+                                    <option value="interval" @(Model.Consultant.AvailableInterval.HasValue ? "selected" : "")>Available in...</option>
+                                    <option value="date" @(Model.Consultant.AvailableWhen.HasValue ? "selected" : "")>Available from specific date</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" id="availabilityInterval" style="display: none;">
+                                <label for="AvailableInterval">Available in:</label>
+                                <select class="form-control" id="AvailableInterval" name="AvailableInterval">
+                                    <option value="7" @(Model.Consultant.AvailableInterval == 7 ? "selected" : "")>1 week</option>
+                                    <option value="14" @(Model.Consultant.AvailableInterval == 14 ? "selected" : "")>2 weeks</option>
+                                    <option value="30" @(Model.Consultant.AvailableInterval == 30 ? "selected" : "")>1 month (4 weeks)</option>
+                                    <option value="60" @(Model.Consultant.AvailableInterval == 60 ? "selected" : "")>2 months</option>
+                                    <option value="90" @(Model.Consultant.AvailableInterval == 90 ? "selected" : "")>3 months or more</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" id="availabilityDate" style="display: none;">
+                                <label for="AvailableWhen">Available from date:</label>
+                                <input type="date" class="form-control" id="AvailableWhen" name="AvailableWhen" value="@(Model.Consultant.AvailableWhen?.ToString("yyyy-MM-dd"))" />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="Summary">Summary:</label>
+                                <textarea class="form-control" id="Summary" name="Summary" rows="4">@Model.Consultant.Summary</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="ProfilePicture">Update Profile Picture:</label>
+                                <input type="file" class="form-control" id="ProfilePicture" name="ProfilePicture" accept="image/*" />
+                                <small class="form-text text-muted">Supported formats: JPG, PNG. Leave empty to keep current picture.</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="checkbox-container" style="display: flex; gap: 30px; align-items: center;">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="BepaStatus" name="BepaStatus" @(Model.Consultant.Bepa ? "checked" : "") />
+                                        <label for="BepaStatus" style="margin-left: 8px; font-weight: normal;">BEPA Status</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="ConfirmedStatus" name="ConfirmedStatus" @(Model.Consultant.Confirmed ? "checked" : "") />
+                                        <label for="ConfirmedStatus" style="margin-left: 8px; font-weight: normal;">Confirmed</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-edit-save-green">Save Changes</button>
+                                <button type="button" class="btn btn-edit-cancel-green" onclick="toggleEditModeHeader()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="private-notes-container">
+                <div class="notes-container">
+                    @if (Model.PrivateNotes != null && Model.PrivateNotes.Any())
+                    {
+                        <ul class="notes-list">
+                            @foreach (var note in Model.PrivateNotes)
+                            {
+                                <li class="note-item">
+                                    <div class="note-header">
+                                        <span class="note-author">@note.AdminInitials</span>
+                                    </div>
+                                    <div class="note-text">@note.Text</div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>No private notes</p>
+                    }
+                </div>
+                <div class="fixed-button-container">
+                    <button id="addNoteBtn" class="btn btn-primary">Add New Note</button>
+                </div>
+                <div id="notePopup" class="note-popup" style="display: none;">
+                    <div class="note-popup-content">
+                        <span class="close-popup">&times;</span>
+                        <form method="post" asp-page-handler="SaveNoteAsync" class="note-form">
+                            <div class="form-group">
+                                <label for="note">Add a new note:</label>
+                                <textarea id="note" name="note" class="form-control" required></textarea>
+                            </div>
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="consultant-rating-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="consultant-rating-stars" id="rating-stars-container" style="margin-left: auto;">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" 
+                            class="consultant-star-icon @(i <= Model.Consultant.PrivateRating ? "consultant-star-filled" : "consultant-star-empty")"
+                            data-rating="@i" onclick="setRating(@i)">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="consultant-section-container">
+            <!-- Venstre kolonne med kontaktinformation og kompetencer -->
+            <div class="consultant-left-column">
+                <!-- Kontaktinformation -->
+                <div class="consultant-info-section">
+                    <div class="consultant-info-header">
+                        <div class="consultant-info-header-text-contact">
+                            <h3 style="display: flex; align-items: center; gap: 8px;">
+                                Contact
+                                <span style="display: flex; align-items: center;">
+                                    <button id="toggleEditBtn" class="edit-button" onclick="toggleEditModeContact()" 
+                                        style="background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center;">
+                                        <img src="~/Images/edit-icon-white.png" class="edit-icon" alt="Edit" 
+                                            style="width: 20px; height: 20px;">
+                                    </button>
+                                </span>
+                            </h3>
+                        </div>
+                    </div>
+    
+                    <!-- Display Mode -->
+                    <div id="displayModeContainer">
+                        <ul>
+                            <li><img src="~/Images/email-icon.png" class="contact-icon"> <a href="mailto:@Model.Consultant.Email" target="_blank">@Model.Consultant.Email</a></li>
+                            <li><img src="~/Images/phone-icon.png" class="contact-icon"> @Model.Consultant.Phone</li>
+                            <li>
+                                <img src="~/Images/address-icon.png" class="contact-icon">
+                                @Model.Consultant.Address, @Model.Consultant.PostalCode @Model.Consultant.City, @Model.Consultant.Country
+                            </li>
+                            <li><img src="~/Images/linkedin-icon.png" class="contact-icon"> <a href="@Model.Consultant.Linkedin" target="_blank">@Model.Consultant.Linkedin</a></li>
+                        </ul>
+                    </div>
+    
+                    <!-- Edit Mode -->
+                    <div id="editModeContainer" style="display: none;">
+                        <form id="consultantEditForm" method="post" action="?handler=UpdateConsultantInfo">
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            <input type="hidden" name="region" value="@Model.Region" />
+                            <div class="form-group">
+                                <label for="Email">Email:</label>
+                                <input type="email" class="form-control" id="Email" name="Email" value="@Model.Consultant.Email" />
+                            </div>
+                            <div class="form-group">
+                                <label for="Phone">Phone:</label>
+                                <input type="tel" class="form-control" id="Phone" name="Phone" value="@Model.Consultant.Phone" />
+                            </div>
+                            <div class="form-group">
+                                <label for="Address">Address:</label>
+                                <input type="text" class="form-control" id="Address" name="Address" value="@Model.Consultant.Address" />
+                            </div>
+                            <div class="form-group">
+                                <label for="City">City:</label>
+                                <input type="text" class="form-control" id="City" name="City" value="@Model.Consultant.City" />
+                            </div>
+                            <div class="form-group">
+                                <label for="PostalCode">Postal Code:</label>
+                                <input type="number" class="form-control" id="PostalCode" name="PostalCode" value="@Model.Consultant.PostalCode" />
+                            </div>
+                            <div class="form-group">
+                                <label for="Country">Country:</label>
+                                <input type="text" class="form-control" id="Country" name="Country" value="@Model.Consultant.Country" />
+                            </div>
+                            <div class="form-group">
+                                <label for="Linkedin">LinkedIn:</label>
+                                <input type="url" class="form-control" id="Linkedin" name="Linkedin" value="@Model.Consultant.Linkedin" />
+                            </div>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-edit-save">Save</button>
+                                <button type="button" class="btn btn-edit-cancel" onclick="toggleEditModeContact()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Interests Section -->
+                <div class="consultant-competency-section">
+                    <div class="consultant-competency-header" style="margin-bottom: 5px;">
+                        <span class="competency-header">Interests</span>
+                        <button id="toggleEditInterestsBtn" class="edit-button" onclick="toggleEditModeInterests()">
+                            <img src="~/Images/edit-icon.png" class="edit-icon" alt="Edit" style="margin-left:10px; width: 20px; height: 20px; vertical-align: middle; padding: 0;">
+                        </button>
+                    </div>
+    
+                    <!-- Display Mode -->
+                    <div id="interestsDisplayMode" class="competencies-and-levels">
+                        @if (!string.IsNullOrEmpty(Model.Consultant.Interests))
+                        {
+                            <div class="interests-content" style="padding: 8px 15px;">
+                                <p style="margin: 0; line-height: 1.4;">@Html.Raw(Model.Consultant.Interests.Replace("\n", "<br>"))</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <p style="padding: 8px 15px; margin: 0; color: #666; font-style: italic;">No interests specified.</p>
+                        }
+                    </div>
+    
+                    <!-- Edit Mode -->
+                    <div id="interestsEditMode" class="interests-edit-container" style="display: none;">
+                        <form id="interestsEditForm" method="post" action="?handler=UpdateInterests">
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            <input type="hidden" name="region" value="@Model.Region" />
+                            <div class="form-group">
+                                <textarea id="Interests" name="Interests" class="form-control" rows="4" placeholder="Enter interests, hobbies, or professional interests...">@Model.Consultant.Interests</textarea>
+                            </div>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-edit-save-green">Save</button>
+                                <button type="button" class="btn btn-edit-cancel-green" onclick="toggleEditModeInterests()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Competency Section -->
+                <div class="consultant-competency-section">
+                    <div class="consultant-competency-header">
+                        <span class="competency-header">Competencies</span>
+                        <span class="consultant-level-header">Level</span>
+                        <button id="toggleEditCompetenciesBtn" class="edit-button" onclick="toggleEditModeCompetencies()">
+                            <img src="~/Images/edit-icon.png" class="edit-icon" alt="Edit" style="margin-left:10px; width: 20px; height: 20px; vertical-align: middle; padding: 0;">
+                        </button>
+                    </div>
+                    <!-- Display Mode -->
+                    <div id="competenciesDisplayMode" class="competencies-and-levels">
+                        @if (Model.Competencies?.Any() == true)
+                        {
+                            <ul class="competency-list">
+                                @foreach (var category in Model.Categories)
+                                {
+                                    var activeCategory = Model.Competencies.FirstOrDefault(c => c.CategoryName == category.CategoryName);
+                                    if (activeCategory != null)
+                                    {
+                                        <li>
+                                            <div class="competency-category">
+                                                <div class="consultant-competencies">
+                                                    <span>@category.CategoryName</span>
+                                                </div>
+                                                <div class="consultant-levels">
+                                                    <span class="category-level">@activeCategory.CategoryLevel</span>
+                                                </div>
+                                            </div>
+                                            <ul>
+                                                @foreach (var subCategory in category.SubCategories)
+                                                {
+                                                    var activeSubCategory = activeCategory.SubCategories.FirstOrDefault(sc => sc.SubCategoryName == subCategory.SubCategoryName);
+                                                    if (activeSubCategory != null)
+                                                    {
+                                                        <li>
+                                                            <div class="competency-subcategory">
+                                                                <div class="consultant-competencies">
+                                                                    <span>@subCategory.SubCategoryName</span>
+                                                                </div>
+                                                                <div class="consultant-levels">
+                                                                    <span class="subcategory-level">@activeSubCategory.SubCategoryLevel</span>
+                                                                </div>
+                                                            </div>
+                                                            <ul>
+                                                                @foreach (var competency in subCategory.Competencies)
+                                                                {
+                                                                    var activeCompetency = activeSubCategory.Competencies.FirstOrDefault(c => c.CompetencyName == competency.CompetencyName);
+                                                                    if (activeCompetency != null)
+                                                                    {
+                                                                        <li class="competency-item">
+                                                                            <div class="consultant-competencies">
+                                                                                <span>@competency.CompetencyName</span>
+                                                                            </div>
+                                                                            <div class="consultant-levels">
+                                                                                <span class="competency-level">@activeCompetency.CompetencyLevel</span>
+                                                                            </div>
+                                                                        </li>
+                                                                    }
+                                                                }
+                                                            </ul>
+                                                        </li>
+                                                    }
+                                                }
+                                            </ul>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p>No competencies available.</p>
+                        }
+                        @if (Model.Languages?.Any() == true)
+                        {
+                            <!-- Language Header - Always visible -->
+                            <div class="consultant-language-header">
+                                <div class="language-category">
+                                    <strong>Languages</strong>
+                                    <button id="toggleEditLanguagesBtn" class="edit-button" onclick="toggleEditModeLanguages()">
+                                        <img src="~/Images/edit-icon.png" class="edit-icon" alt="Edit" style="margin-left:10px; width: 20px; height: 20px; vertical-align: middle; padding: 0;">
+                                    </button>
+                                </div>
+                                <div class="language-level-header">
+                                    <strong>Level</strong>
+                                </div>
+                            </div>
+
+                            <!-- Display Mode -->
+                            <div id="languageDisplayMode" class="languages-and-levels">
+                                <ul class="language-list">
+                                    @foreach (var language in Model.Languages)
+                                    {
+                                        <li class="language-item">
+                                            <div class="consultant-language-name">
+                                                <span>@language.LanguageName</span>
+                                            </div>
+                                            <div class="consultant-language-levels">
+                                                <span class="language-level">@language.LanguageLevel</span>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+
+                            <!-- Edit Mode -->
+                            <div id="languagesEditMode" class="languages-edit-container" style="display: none;">
+                                <form method="post" asp-page-handler="UpdateLanguages">
+                                    <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                                    <input type="hidden" name="region" value="@Model.Region" />
+                                    
+                                    @foreach (var availableLanguage in Model.AvailableLanguages)
+                                    {
+                                        <div class="language-edit-item">
+                                            <div class="checkbox-container">
+                                                <div class="checkbox-header">
+                                                    <input type="checkbox" 
+                                                           id="lang_@availableLanguage" 
+                                                           class="language-checkbox"
+                                                           data-language="@availableLanguage"
+                                                           onchange="toggleLanguage(this)">
+                                                    <span class="language-name">@availableLanguage</span>
+                                                </div>
+                                                <div class="slider-container">
+                                                    <input type="range" 
+                                                           id="lang_slider_@availableLanguage" 
+                                                           class="language-slider" 
+                                                           min="0" 
+                                                           max="5"
+                                                           value="0" 
+                                                           oninput="updateLanguageLevel(this)"
+                                                           disabled>
+                                                    <span id="lang_level_@availableLanguage" class="level-span">0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    <div class="form-buttons">
+                                        <button type="submit" class="btn btn-edit-save-green">Save</button>
+                                        <button type="button" class="btn btn-edit-cancel-green" onclick="toggleEditModeLanguages()">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <p>No languages available.</p>
+                        }
+                    </div>
+                    <!-- Edit Mode -->
+                    <div id="competenciesEditMode" class="competencies-edit-container" style="display: none;">
+                        <form method="post" asp-page-handler="UpdateCompetencies">
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            <input type="hidden" name="region" value="@Model.Region" />
+                            
+                            @foreach (var category in Model.Categories)
+                            {
+                                <div class="category-edit-item">
+                                    <div class="checkbox-container">
+                                        <div class="checkbox-header">
+                                            <input type="checkbox" 
+                                                   id="cat_@category.CategoryName" 
+                                                   class="category-checkbox"
+                                                   data-category="@category.CategoryName"
+                                                   onchange="toggleCategory(this)">
+                                            <span class="category-name">@category.CategoryName</span>
+                                        </div>
+                                        <div class="slider-container">
+                                            <input type="range" 
+                                                   id="cat_slider_@category.CategoryName" 
+                                                   class="category-slider" 
+                                                   min="0" 
+                                                   max="10" 
+                                                   value="0" 
+                                                   disabled>
+                                            <span id="cat_level_@category.CategoryName" class="level-span">0</span>
+                                        </div>
+                                    </div>
+
+                                    <div id="subcategories_@category.CategoryName" class="subcategories-list" style="display: none;">
+                                        @foreach (var subCategory in category.SubCategories)
+                                        {
+                                            <div class="subcategory-edit-item">
+                                                <div class="checkbox-container">
+                                                    <div class="checkbox-header">
+                                                        <input type="checkbox" 
+                                                               id="sub_@subCategory.SubCategoryName" 
+                                                               class="subcategory-checkbox"
+                                                               data-subcategory="@subCategory.SubCategoryName"
+                                                               data-parent="@category.CategoryName"
+                                                               onchange="toggleSubCategory(this)">
+                                                        <span class="subcategory-name">@subCategory.SubCategoryName</span>
+                                                    </div>
+                                                    <div class="slider-container">
+                                                        <input type="range" 
+                                                               id="sub_slider_@subCategory.SubCategoryName" 
+                                                               class="subcategory-slider" 
+                                                               min="0" 
+                                                               max="10" 
+                                                               value="0" 
+                                                               disabled>
+                                                        <span id="sub_level_@subCategory.SubCategoryName" class="level-span">0</span>
+                                                    </div>
+                                                </div>
+
+                                                <div id="competencies_@subCategory.SubCategoryName" class="competencies-list" style="display: none;">
+                                                    @foreach (var competency in subCategory.Competencies)
+                                                    {
+                                                        <div class="competence-container">
+                                                            <div class="checkbox-container">
+                                                                <div class="checkbox-header">
+                                                                    <input type="checkbox" 
+                                                                           id="comp_@competency.CompetencyName" 
+                                                                           class="competency-checkbox"
+                                                                           data-competency="@competency.CompetencyName"
+                                                                           data-parent-sub="@subCategory.SubCategoryName"
+                                                                           onchange="toggleCompetency(this)">
+                                                                    <span class="competency-name">@competency.CompetencyName</span>
+                                                                </div>
+                                                                <div class="slider-container">
+                                                                    <input type="range" 
+                                                                           id="comp_slider_@competency.CompetencyName" 
+                                                                           class="competency-slider" 
+                                                                           min="0" 
+                                                                           max="10" 
+                                                                           value="0" 
+                                                                           disabled>
+                                                                    <span id="comp_level_@competency.CompetencyName" class="level-span">0</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-edit-save-green">Save</button>
+                                <button type="button" class="btn btn-edit-cancel-green" onclick="toggleEditModeCompetencies()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Højre kolonne med uddannelse og joberfaring -->
+            <div class="consultant-right-column">
+                <div class="consultant-section">
+                    <h3>Education<button id="toggleEditEducationBtn" class="edit-button" onclick="toggleEditModeEducation()">
+                        <img src="~/Images/edit-icon.png" class="edit-icon" alt="Edit" style="margin-left:10px; margin-top: 5px; width: 20px; height: 20px; vertical-align: middle; padding: 0;">
+                    </button></h3>
+                    
+                    <div id="educationDisplayMode">
+                        <ul>
+                            @foreach (var education in Model.Consultant.Education)
+                            {
+                                <li class="education-item">
+                                    <span class="dates">
+                                        @education.StartDate.ToString("MMM yyyy") - @education.EndDateString
+                                    </span>
+                                    <span class="education-header">
+                                        <strong>@education.Degree in @education.Field</strong>
+                                    </span>
+                                    <br>
+                                    <span class="institution">@education.Institution</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    <div id="educationEditMode" class="education-edit-container" style="display: none;">
+                        <form method="post" asp-page-handler="UpdateEducation">
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            <input type="hidden" name="region" value="@Model.Region" />
+                            <div id="educationSections">
+                                @foreach (var education in Model.Consultant.Education)
+                                {
+                                    <div class="education-edit-item">
+                                        <input type="hidden" name="Education[@education.Id].Id" value="@education.Id" />
+                                        <div class="form-group">
+                                            <label for="Degree-@education.Id">Degree:</label>
+                                            <select id="Degree-@education.Id" name="Education[@education.Id].Degree" class="form-control" required>
+                                                <option value="">Select Degree</option>
+                                                @if (Model.Degrees != null && Model.Degrees.Any())
+                                                {
+                                                    @foreach (var degree in Model.Degrees)
+                                                    {
+                                                        <option value="@degree" @Html.Raw(degree == education.Degree ? "selected=\"selected\"" : "")>@degree</option>
+                                                    }
+                                                }
+                                                @if (!string.IsNullOrEmpty(education.Degree))
+                                                {
+                                                    <option value="@education.Degree" selected="selected">@education.Degree</option>
+                                                }
+                                            </select>  
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="Field-@education.Id">Field:</label>
+                                            <select id="Field-@education.Id" name="Education[@education.Id].Field" class="form-control" required>
+                                                <option value="">Select Field</option>
+                                                @if (Model.Fields != null && Model.Fields.Any())
+                                                {
+                                                    @foreach (var field in Model.Fields)
+                                                    {
+                                                        <option value="@field" @Html.Raw(field == education.Field ? "selected=\"selected\"" : "")>@field</option>
+                                                    }
+                                                }
+                                                @if (!string.IsNullOrEmpty(education.Field))
+                                                {
+                                                    <option value="@education.Field" selected="selected">@education.Field</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="Institution-@education.Id">Institution:</label>
+                                            <input type="text" id="Institution-@education.Id" name="Education[@education.Id].Institution" class="form-control" value="@education.Institution" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="StartDate-@education.Id">Start Date:</label>
+                                            <input type="date" id="StartDate-@education.Id" name="Education[@education.Id].StartDate" class="form-control" value="@education.StartDate.ToString("yyyy-MM-dd")" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="EndDate-@education.Id">End Date:</label>
+                                            <input type="date" id="EndDate-@education.Id" name="Education[@education.Id].EndDate" class="form-control" value="@education.EndDate?.ToString("yyyy-MM-dd")" />
+                                        </div>
+                                        <button type="button" class="remove-education-btn" onclick="removeEducation(this)">✕</button>
+                                    </div>
+                                }
+                            </div>
+                            <button type="button" class="btn btn-add-green" onclick="addEducation()">Add Education</button>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-edit-save-green">Save</button>
+                                <button type="button" class="btn btn-edit-cancel-green" onclick="toggleEditModeEducation()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="consultant-section">
+                    <h3>Job Experience<button id="toggleEditJobBtn" class="edit-button" onclick="toggleEditModeJob()">
+                        <img src="~/Images/edit-icon.png" class="edit-icon" alt="Edit" style="margin-left:10px; margin-top: 5px; width: 20px; height: 20px; vertical-align: middle; padding: 0;">
+                    </button></h3>
+                    <div id="jobDisplayMode">
+                        <ul>
+                            @foreach (var previousWorkPlace in Model.Consultant.PreviousWorkPlaces)
+                            {
+                                <li class="job-item">
+                                    <span class="dates">
+                                        @previousWorkPlace.StartDate.ToString("MMM yyyy") - @previousWorkPlace.EndDateString
+                                    </span>
+                                    <span class="job-header">
+                                        <strong>@previousWorkPlace.Position at @previousWorkPlace.Company</strong>
+                                    </span>
+                                    <span class="description">@previousWorkPlace.Description</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    <div id="jobEditMode" class="job-edit-container" style="display: none;">
+                        <form method="post" asp-page-handler="UpdateJobExperience">
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            <input type="hidden" name="region" value="@Model.Region" />
+                            <div id="jobSections">
+                                @foreach (var job in Model.Consultant.PreviousWorkPlaces)
+                                {
+                                    <div class="job-edit-item">
+                                        <input type="hidden" name="PreviousWorkPlaces[@job.Id].Id" value="@job.Id" />
+                                        <div class="form-group">
+                                            <label for="Position-@job.Id">Position:</label>
+                                            <input type="text" id="Position-@job.Id" name="PreviousWorkPlaces[@job.Id].Position" class="form-control" value="@job.Position" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="Company-@job.Id">Company:</label>
+                                            <input type="text" id="Company-@job.Id" name="PreviousWorkPlaces[@job.Id].Company" class="form-control" value="@job.Company" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="StartDate-@job.Id">Start Date:</label>
+                                            <input type="date" id="StartDate-@job.Id" name="PreviousWorkPlaces[@job.Id].StartDate" class="form-control" value="@job.StartDate.ToString("yyyy-MM-dd")" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="EndDate-@job.Id">End Date:</label>
+                                            <input type="date" id="EndDate-@job.Id" name="PreviousWorkPlaces[@job.Id].EndDate" class="form-control" value="@(job.EndDate?.ToString("yyyy-MM-dd") ?? "")" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="Description-@job.Id">Description:</label>
+                                            <textarea id="Description-@job.Id" name="PreviousWorkPlaces[@job.Id].Description" class="form-control">@job.Description</textarea>
+                                        </div>
+                                        <button type="button" class="remove-job-btn" onclick="removeJob(this)">✕</button>
+                                    </div>
+                                }
+                            </div>
+                            <button type="button" class="btn btn-add-green" onclick="addJob()">Add Job</button>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-edit-save-green">Save</button>
+                                <button type="button" class="btn btn-edit-cancel-green" onclick="toggleEditModeJob()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="consultant-section">
+                    <h3>References<button id="toggleEditRefBtn" class="edit-button" onclick="toggleEditModeRef()">
+                        <img src="~/Images/edit-icon.png" class="edit-icon" alt="Edit" style="margin-left:10px; margin-top: 5px; width: 20px; height: 20px; vertical-align: middle; padding: 0;">
+                    </button></h3>
+                    <div id="refDisplayMode">
+                        @if (Model.Consultant.References != null && Model.Consultant.References.Any())
+                        {
+                            <ul>
+                                @foreach (var reference in Model.Consultant.References)
+                                {
+                                    <li class="reference-item">
+                                        <span class="reference-name"><strong>@reference.Name</strong></span> <br>
+                                        <span class="reference-company">@reference.Company</span> <br>
+                                        <span class="reference-contact">@reference.Phone</span> <br>
+                                        <span class="reference-contact">@reference.Email</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p>No references available.</p>
+                        }
+                    </div>
+                    <div id="refEditMode" style="display: none;">
+                        <form method="post" asp-page-handler="UpdateReferences">
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            <div id="referencesSections">
+                                @if (Model.Consultant.References != null)
+                                {
+                                    foreach (var reference in Model.Consultant.References)
+                                    {
+                                        <div class="reference-edit-item">
+                                            <input type="hidden" name="References[].Id" value="@reference.Id" />
+                                            <div class="form-group">
+                                                <label for="Name-@reference.Id">Name:</label>
+                                                <input type="text" id="Name-@reference.Id" name="References[].Name" class="form-control" value="@reference.Name" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="Company-@reference.Id">Company:</label>
+                                                <input type="text" id="Company-@reference.Id" name="References[].Company" class="form-control" value="@reference.Company" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="Phone-@reference.Id">Phone:</label>
+                                                <input type="tel" id="Phone-@reference.Id" name="References[].Phone" class="form-control" value="@reference.Phone" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="Email-@reference.Id">Email:</label>
+                                                <input type="email" id="Email-@reference.Id" name="References[].Email" class="form-control" value="@reference.Email" />
+                                            </div>
+                                            <button type="button" class="remove-reference-btn" onclick="removeReference(this)">✕</button>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                            <button type="button" class="btn btn-add-green" onclick="addReference()">Add Reference</button>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-edit-save-green">Save</button>
+                                <button type="button" class="btn btn-edit-cancel-green" onclick="toggleEditModeRef()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="consultant-section">
+                    <h3>Additional Notes<button id="toggleEditNotesBtn" class="edit-button" onclick="toggleEditModeNotes()">
+                        <img src="~/Images/edit-icon.png" class="edit-icon" alt="Edit" style="margin-left:10px; margin-top: 5px; width: 20px; height: 20px; vertical-align: middle; padding: 0;">
+                    </button></h3>
+                    <div id="notesDisplayMode">
+                        @if (Model.Consultant.AdditionalNotes != null && Model.Consultant.AdditionalNotes.Any())
+                        {
+                            <ul>
+                                @foreach (var note in Model.Consultant.AdditionalNotes)
+                                {
+                                    <li class="note-item">
+                                        <span class="note-text">@note</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p>No additional notes available.</p>
+                        }
+                    </div>
+                    <div id="notesEditMode" style="display: none;">
+                        <form method="post" asp-page-handler="UpdateAdditionalNotes">
+                            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+                            <div id="notesSections">
+                                @if (Model.Consultant.AdditionalNotes != null)
+                                {
+                                    @for (int i = 0; i < Model.Consultant.AdditionalNotes.Count; i++)
+                                    {
+                                        <div class="note-edit-item">
+                                            <div class="form-group">
+                                                <label for="Note-@i">Note @(i + 1):</label>
+                                                <textarea id="Note-@i" name="AdditionalNotes[@i]" class="form-control" rows="3">@Model.Consultant.AdditionalNotes[i]</textarea>
+                                            </div>
+                                            <button type="button" class="remove-note-btn" onclick="removeAdditionalNote(this)">✕</button>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                            <button type="button" class="btn btn-add-green" onclick="addAdditionalNote()">Add Note</button>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-edit-save-green">Save</button>
+                                <button type="button" class="btn btn-edit-cancel-green" onclick="toggleEditModeNotes()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="text-align:center; margin: 40px 0 20px 0;">
+        <form id="softDeleteForm" style="display:none;">
+            <!-- This form is hidden; deletion is handled by JS -->
+            <input type="hidden" name="userId" value="@Model.Consultant.UserId" />
+        </form>
+        <button id="deleteProfileBtn" class="btn btn-danger" style="background:#dc3545; color:white; padding:10px 30px; border-radius:8px; font-size:1.1rem; border:none; cursor:pointer;">Delete Profile</button>
+    </div>
+    <script>
+        // Confirm modal callback variable
+        let confirmCallback = null;
+        
+        // Get region from localStorage
+        const REGION = localStorage.getItem('selectedRegion');
+        console.log('[DEBUG] Region set to:', REGION);
+        
+        // Helper function to check if region is available
+        function isRegionAvailable() {
+            if (!REGION) {
+                console.error('[ERROR] No region selected. Please select a region first.');
+                showAlert('Region Required', 'Please select a region first.', 'error');
+                return false;
+            }
+            return true;
+        }
+        
+        if (typeof DEBUG === 'undefined' || DEBUG) {
+        console.debug("[DEBUG] Person.cshtml script loaded!");
+        // User email display is now handled by auth.js, but add backup
+        document.addEventListener('DOMContentLoaded', function() {
+            // Backup email display if auth.js didn't work
+            setTimeout(() => {
+                const userEmail = localStorage.getItem('userEmail');
+                const userEmailElement = document.getElementById('userEmail');
+                console.debug('[DEBUG] Backup email display check:', {
+                    userEmail: userEmail,
+                    element: !!userEmailElement,
+                    currentText: userEmailElement?.textContent
+                });
+                
+                if (userEmailElement && userEmail && !userEmailElement.textContent) {
+                    userEmailElement.textContent = userEmail;
+                    console.debug('[DEBUG] Applied backup email display:', userEmail);
+                }
+            }, 100);
+            // Always attach click handler for password change redirect
+            var userInfo = document.getElementById('userInfoContainer');
+            if (userInfo) {
+                userInfo.style.cursor = 'pointer';
+                userInfo.addEventListener('click', function() {
+                    setTimeout(function() {
+                        window.location.href = '/PasswordChange';
+                    }, 200); // 200ms delay to allow cookies to propagate
+                });
+                console.debug('[DEBUG] userInfoContainer click handler attached');
+            } else {
+                console.debug('[DEBUG] userInfoContainer element not found');
+            }
+        });
+    }
+    document.getElementById('headerEditForm')?.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        let profilePictureUrl = null;
+        
+        const availabilityStatus = document.getElementById('AvailabilityStatus').value;
+        const headerData = {
+            userId: this.querySelector('input[name="userId"]').value,
+            firstName: document.getElementById('FirstName').value,
+            lastName: document.getElementById('LastName').value,
+            userRole: parseInt(document.getElementById('UserRole').value),
+            summary: document.getElementById('Summary').value,
+            isAvailable: availabilityStatus === 'available',
+            availableInterval: availabilityStatus === 'interval' ? parseInt(document.getElementById('AvailableInterval').value) : null,
+            availableWhen: availabilityStatus === 'date' ? document.getElementById('AvailableWhen').value : null,
+            bepaStatus: document.getElementById('BepaStatus').checked,
+            confirmedStatus: document.getElementById('ConfirmedStatus').checked,
+            profilePictureUrl: profilePictureUrl // Include the new profile picture URL if uploaded
+        };
+
+        // Send the updated header info to the server
+        fetch(`/api/user/${REGION}/update-header`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getJwtTokenFromCookie()}`
+            },
+            body: JSON.stringify(headerData)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to update header information');
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error', 'An error occurred. Please try again.', 'error');
+        });
+    });
+
+    let engineeringFields = [];
+    fetch('/api/competencies/GetEngineeringFields')
+        .then(response => response.json())
+        .then(fields => {
+            engineeringFields = fields;
+            // If you need to populate dropdowns or use the fields immediately, do it here
+        })
+        .catch(error => {
+            console.error('Failed to load engineering fields:', error);
+        });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector('form[asp-page-handler="SaveNoteAsync"]');
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const formData = new FormData(form);
+                // Get JWT token from cookies
+                const jwtToken = getJwtTokenFromCookie();
+                console.log('[DEBUG] Retrieved JWT Token:', jwtToken); // Log the token for debugging
+                if (!jwtToken) {
+                    showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+                    return;
+                }
+                // Convert form data to JSON and include UserId explicitly
+                const requestData = Object.fromEntries(formData.entries());
+                // Accept both UserId and userId for compatibility
+                const userId = requestData.UserId || requestData.userId;
+                if (!userId) {
+                    console.error('[ERROR] UserId is missing in the form data.');
+                    showAlert('Error', 'UserId is missing. Please refresh the page and try again.', 'error');
+                    return;
+                }
+                requestData.UserId = userId; // Ensure correct property for backend
+                console.log('[DEBUG] Request Data:', requestData); // Log the request data
+
+                // Get current region from REGION constant (no fallback to maintain region management)
+                const region = REGION;
+                const apiUrl = `/api/user/${region}/save-private-note`;
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('[DEBUG] Note saved successfully.');
+                            window.location.reload();
+                        } else {
+                            response.text().then(error => {
+                                console.error('[ERROR] Backend Response:', error);
+                                showAlert('Save Failed', `Failed to save note: ${error}`, 'error');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[ERROR] Network Error:', error);
+                        showAlert('Error', 'An error occurred. Please try again.', 'error');
+                    });
+            });
+        } else {
+            console.error('[ERROR] Form with asp-page-handler="SaveNoteAsync" not found.');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const addNoteBtn = document.getElementById('addNoteBtn');
+        const notePopup = document.getElementById('notePopup');
+        const closePopup = document.querySelector('.close-popup');
+
+        addNoteBtn.addEventListener('click', function() {
+            notePopup.style.display = 'flex';
+        });
+        
+        closePopup.addEventListener('click', function() {
+            notePopup.style.display = 'none';
+        });
+        
+        // Close popup when clicking outside the content
+        window.addEventListener('click', function(event) {
+            if (event.target == notePopup) {
+                notePopup.style.display = 'none';
+            }
+        });
+    });
+
+    function removeNote(button) {
+        button.closest('.note-item').remove();
+    }
+
+    // Function to set the rating when stars are clicked
+    function setRating(rating) {
+        console.log(`Setting rating to: ${rating}`);
+        
+        // Only update PrivateRating stars, not TechRating stars
+        const stars = document.querySelectorAll('#rating-stars-container .consultant-star-icon');
+
+        // Update visual appearance of stars
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.remove('consultant-star-empty');
+                star.classList.add('consultant-star-filled');
+            } else {
+                star.classList.remove('consultant-star-filled');
+                star.classList.add('consultant-star-empty');
+            }
+        });
+
+        // Get the user ID from the URL
+        const pathParts = window.location.pathname.split('/');
+        const userId = pathParts[pathParts.length - 1];
+
+        // Get JWT token from cookies
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+            return;
+        }
+
+        // Send the updated rating to the server
+        fetch(`/api/user/${REGION}/update-rating`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${jwtToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: userId,
+                rating: rating,
+                type: 'private'
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Rating updated successfully');
+            } else {
+                response.text().then(error => {
+                    console.error(`Failed to update rating: ${error}`);
+                    showAlert('Update Failed', `Failed to update rating: ${error}`, 'error');
+                });
+            }
+        })
+        .catch(error => {
+            console.error(`Network error: ${error}`);
+            showAlert('Error', 'An error occurred. Please try again.', 'error');
+        });
+    }
+
+    // Function to set the TechRating when stars are clicked
+    function setTechRating(rating) {
+        // Get all tech rating star icons
+        const stars = document.querySelectorAll('#tech-rating-stars-container .tech-rating-star');
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.add('consultant-star-filled');
+                star.classList.remove('consultant-star-empty');
+            } else {
+                star.classList.remove('consultant-star-filled');
+                star.classList.add('consultant-star-empty');
+            }
+        });
+        // Get the user ID from the URL
+        const pathParts = window.location.pathname.split('/');
+        const userId = pathParts[pathParts.length - 1];
+        // Get JWT token from localStorage
+        const jwtToken = localStorage.getItem('jwt_token');
+        if (!jwtToken) {
+            showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+            return;
+        }
+        // Send the updated tech rating to the server
+        fetch(`/api/user/${REGION}/update-rating`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify({ userId: userId, rating: rating, type: 'tech' })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to update tech rating');
+        })
+        .catch(error => {
+            showAlert('Error', 'An error occurred. Please try again.', 'error');
+        });
+    } // Close the DEBUG conditional block
+    
+    function toggleEditModeHeader() {
+        const displayMode = document.getElementById('headerDisplayMode');
+        const editMode = document.getElementById('headerEditMode');
+        const editButton = document.getElementById('toggleEditHeaderBtn');
+
+        if (editMode.style.display === 'none' || editMode.style.display === '') {
+            editMode.style.display = 'flex';
+            editButton.style.display = 'none';
+            // Initialize availability options based on current state
+            initializeAvailabilityOptions();
+        } else {
+            editMode.style.display = 'none';
+            editButton.style.display = 'block';
+        }
+    }
+
+    function toggleAvailabilityOptions() {
+        const status = document.getElementById('AvailabilityStatus').value;
+        const intervalDiv = document.getElementById('availabilityInterval');
+        const dateDiv = document.getElementById('availabilityDate');
+        
+        intervalDiv.style.display = 'none';
+        dateDiv.style.display = 'none';
+        
+        if (status === 'interval') {
+            intervalDiv.style.display = 'block';
+        } else if (status === 'date') {
+            dateDiv.style.display = 'block';
+        }
+    }
+
+    function initializeAvailabilityOptions() {
+        // Set the correct availability status based on current consultant data
+        const availabilityStatus = document.getElementById('AvailabilityStatus');
+        const isAvailable = @(Model.Consultant.IsAvailable ? "true" : "false");
+        const hasInterval = @(Model.Consultant.AvailableInterval.HasValue ? "true" : "false");
+        const hasDate = @(Model.Consultant.AvailableWhen.HasValue ? "true" : "false");
+        
+        if (isAvailable) {
+            availabilityStatus.value = 'available';
+        } else if (hasInterval) {
+            availabilityStatus.value = 'interval';
+        } else if (hasDate) {
+            availabilityStatus.value = 'date';
+        }
+        
+        toggleAvailabilityOptions();
+    }
+
+    function toggleEditModeContact() {
+        const displayMode = document.getElementById('displayModeContainer');
+        const editMode = document.getElementById('editModeContainer');
+        const editButton = document.getElementById('toggleEditBtn');
+        
+        if (displayMode.style.display !== 'none') {
+            // Switch to edit mode
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            editButton.classList.add('active');
+        } else {
+            // Switch back to display mode
+            displayMode.style.display = 'block';
+            editMode.style.display = 'none';
+            editButton.classList.remove('active');
+        }
+    }
+
+    function toggleEditModeEducation() {
+        const displayMode = document.getElementById('educationDisplayMode');
+        const editMode = document.getElementById('educationEditMode');
+        const editButton = document.getElementById('toggleEditEducationBtn');
+
+        if (displayMode.style.display !== 'none') {
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            editButton.classList.add('active');
+        } else {
+            displayMode.style.display = 'block';
+            editMode.style.display = 'none';
+            editButton.classList.remove('active');
+        }
+    }
+
+    function toggleEditModeJob() {
+        const displayMode = document.getElementById('jobDisplayMode');
+        const editMode = document.getElementById('jobEditMode');
+        const editButton = document.getElementById('toggleEditJobBtn');
+
+        if (displayMode.style.display !== 'none') {
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            editButton.classList.add('active');
+        } else {
+            displayMode.style.display = 'block';
+            editMode.style.display = 'none';
+            editButton.classList.remove('active');
+        }
+    }
+
+    function toggleEditModeRef() {
+        const displayMode = document.getElementById('refDisplayMode');
+        const editMode = document.getElementById('refEditMode');
+        const editButton = document.getElementById('toggleEditRefBtn');
+
+        if (displayMode.style.display !== 'none') {
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            editButton.classList.add('active');
+        } else {
+            displayMode.style.display = 'block';
+            editMode.style.display = 'none';
+            editButton.classList.remove('active');
+        }
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        window.availableDegrees = @Html.Raw(Json.Serialize(Model.Degrees ?? new List<string>()));
+        window.availableFields = @Html.Raw(Json.Serialize(Model.Fields ?? new List<string>()));
+    });
+
+    function toggleEditModeCompetencies() {
+        const displayMode = document.getElementById('competenciesDisplayMode');
+        const editMode = document.getElementById('competenciesEditMode');
+        
+        if (displayMode.style.display !== 'none') {
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            initializeCompetenciesEdit();
+        } else {
+            displayMode.style.display = 'block';
+            editMode.style.display = 'none';
+        }
+    }
+
+    function initializeCompetenciesEdit() {
+        const existingCompetencies = @Json.Serialize(Model.Competencies);
+        
+        // Add event listeners to all sliders
+        document.querySelectorAll('.category-slider').forEach(slider => {
+            slider.addEventListener('input', function() {
+                const categoryName = this.id.replace('cat_slider_', '');
+                const levelSpan = document.getElementById(`cat_level_${categoryName}`);
+                if (levelSpan) {
+                    levelSpan.textContent = this.value;
+                }
+            });
+        });
+
+        document.querySelectorAll('.subcategory-slider').forEach(slider => {
+            slider.addEventListener('input', function() {
+                const subCategoryName = this.id.replace('sub_slider_', '');
+                const levelSpan = document.getElementById(`sub_level_${subCategoryName}`);
+                if (levelSpan) {
+                    levelSpan.textContent = this.value;
+                }
+            });
+        });
+
+        document.querySelectorAll('.competency-slider').forEach(slider => {
+            slider.addEventListener('input', function() {
+                const competencyName = this.id.replace('comp_slider_', '');
+                const levelSpan = document.getElementById(`comp_level_${competencyName}`);
+                if (levelSpan) {
+                    levelSpan.textContent = this.value;
+                }
+            });
+        });
+        
+        // Initialize existing competencies
+        existingCompetencies.forEach(category => {
+            const categoryCheckbox = document.getElementById(`cat_${category.CategoryName}`);
+            const categorySlider = document.getElementById(`cat_slider_${category.CategoryName}`);
+            
+            if (categoryCheckbox && categorySlider) {
+                categoryCheckbox.checked = true;
+                categorySlider.disabled = false;
+                categorySlider.value = category.CategoryLevel || 0;
+                document.getElementById(`cat_level_${category.CategoryName}`).textContent = category.CategoryLevel || 0;
+                toggleCategory(categoryCheckbox);
+                
+                category.SubCategories.forEach(subCategory => {
+                    const subCheckbox = document.getElementById(`sub_${subCategory.SubCategoryName}`);
+                    const subSlider = document.getElementById(`sub_slider_${subCategory.SubCategoryName}`);
+                    
+                    if (subCheckbox && subSlider) {
+                        subCheckbox.checked = true;
+                        subSlider.disabled = false;
+                        subSlider.value = subCategory.SubCategoryLevel || 0;
+                        document.getElementById(`sub_level_${subCategory.SubCategoryName}`).textContent = subCategory.SubCategoryLevel || 0;
+                        toggleSubCategory(subCheckbox);
+                        
+                        subCategory.Competencies.forEach(comp => {
+                            const compCheckbox = document.getElementById(`comp_${comp.CompetencyName}`);
+                            const compSlider = document.getElementById(`comp_slider_${comp.CompetencyName}`);
+                            
+                            if (compCheckbox && compSlider) {
+                                compCheckbox.checked = true;
+                                compSlider.disabled = false;
+                                compSlider.value = comp.CompetencyLevel || 0;
+                                document.getElementById(`comp_level_${comp.CompetencyName}`).textContent = comp.CompetencyLevel || 0;
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    function toggleCategory(checkbox) {
+        const categoryName = checkbox.dataset.category;
+        const subcategoriesContainer = document.getElementById(`subcategories_${categoryName}`);
+        const categorySlider = document.getElementById(`cat_slider_${categoryName}`);
+        
+        if (subcategoriesContainer) {
+            subcategoriesContainer.style.display = checkbox.checked ? 'block' : 'none';
+            categorySlider.disabled = !checkbox.checked;
+            
+            if (!checkbox.checked) {
+                // Uncheck all subcategories when category is unchecked
+                subcategoriesContainer.querySelectorAll('.subcategory-checkbox').forEach(subCheckbox => {
+                    subCheckbox.checked = false;
+                    toggleSubCategory(subCheckbox);
+                });
+                categorySlider.value = 0;
+                document.getElementById(`cat_level_${categoryName}`).textContent = '0';
+            }
+        }
+    }
+
+    function toggleSubCategory(checkbox) {
+        const subCategoryName = checkbox.dataset.subcategory;
+        const competenciesContainer = document.getElementById(`competencies_${subCategoryName}`);
+        const subCategorySlider = document.getElementById(`sub_slider_${subCategoryName}`);
+        
+        if (competenciesContainer) {
+            competenciesContainer.style.display = checkbox.checked ? 'block' : 'none';
+            subCategorySlider.disabled = !checkbox.checked;
+            
+            if (!checkbox.checked) {
+                // Uncheck all competencies when subcategory is unchecked
+                competenciesContainer.querySelectorAll('.competency-checkbox').forEach(compCheckbox => {
+                    compCheckbox.checked = false;
+                    const compName = compCheckbox.dataset.competency;
+                    const compSlider = document.getElementById(`comp_slider_${compName}`);
+                    compSlider.disabled = true;
+                    compSlider.value = 0;
+                    document.getElementById(`comp_level_${compName}`).textContent = '0';
+                });
+                subCategorySlider.value = 0;
+                document.getElementById(`sub_level_${subCategoryName}`).textContent = '0';
+            }
+        }
+    }
+
+    function toggleCompetency(checkbox) {
+        const competencyName = checkbox.dataset.competency;
+        const competencySlider = document.getElementById(`comp_slider_${competencyName}`);
+        
+        if (competencySlider) {
+            competencySlider.disabled = !checkbox.checked;
+            if (!checkbox.checked) {
+                competencySlider.value = 0;
+                document.getElementById(`comp_level_${competencyName}`).textContent = '0';
+            }
+        }
+    }
+
+    function toggleEditModeLanguages() {
+        const displayMode = document.getElementById('languageDisplayMode');
+        const editMode = document.getElementById('languagesEditMode');
+        
+        if (displayMode.style.display !== 'none') {
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            initializeLanguagesEdit();
+        } else {
+            displayMode.style.display = 'block';
+            editMode.style.display = 'none';
+        }
+    }
+
+    function toggleLanguage(checkbox) {
+        const languageName = checkbox.dataset.language;
+        const languageSlider = document.getElementById(`lang_slider_${languageName}`);
+        
+        if (languageSlider) {
+            languageSlider.disabled = !checkbox.checked;
+            if (!checkbox.checked) {
+                languageSlider.value = 0;
+                document.getElementById(`lang_level_${languageName}`).textContent = '0';
+            }
+        }
+    }
+
+    function initializeLanguagesEdit() {
+        const existingLanguages = @Json.Serialize(Model.Languages);
+        
+        existingLanguages.forEach(language => {
+            const languageCheckbox = document.getElementById(`lang_${language.LanguageName}`);
+            const languageSlider = document.getElementById(`lang_slider_${language.LanguageName}`);
+            
+            if (languageCheckbox && languageSlider) {
+                languageCheckbox.checked = true;
+                languageSlider.disabled = false;
+                languageSlider.value = language.LanguageLevel || 0;
+                document.getElementById(`lang_level_${language.LanguageName}`).textContent = language.LanguageLevel || 0;
+            }
+        });
+    }
+
+    function updateLanguageLevel(slider) {
+        const levelSpan = document.getElementById(`lang_level_${slider.id.replace('lang_slider_', '')}`);
+        if (levelSpan) {
+            levelSpan.textContent = slider.value;
+        }
+    }
+    
+    function validateCompetencies() {
+        const competencyErrors = [];
+        console.log('Running competency validation...');
+        
+        // Check all checked competency checkboxes and their levels
+        document.querySelectorAll('.competency-checkbox:checked').forEach(compCheckbox => {
+            const competencyName = compCheckbox.dataset.competency;
+            const competencyLevel = parseInt(document.getElementById(`comp_slider_${competencyName}`).value);
+            
+            console.log(`Checking competency: ${competencyName}, level: ${competencyLevel}`);
+            
+            if (competencyLevel === 0) {
+                competencyErrors.push(`Competency "${competencyName}" is checked but has no level assigned (0). Please adjust the level slider.`);
+            }
+        });
+        
+        console.log(`Found ${competencyErrors.length} competency validation errors`);
+        return competencyErrors;
+    }
+
+    // Handle form submission
+    document.querySelector('form[asp-page-handler="UpdateCompetencies"]').addEventListener('submit', function(event) {
+        event.preventDefault();
+        console.log('Competency form submitted, running validation...');
+        
+        // Validate competencies first
+        const competencyErrors = validateCompetencies();
+        if (competencyErrors.length > 0) {
+            console.log('Validation errors found:', competencyErrors);
+            showAlert('Competency Validation Error', competencyErrors.join('\n\n'), 'error');
+            return;
+        }
+        
+        console.log('Validation passed, proceeding with form submission...');
+        
+        const competencyData = {
+            userId: '@Model.Consultant.UserId',
+            competencies: []
+        };
+        
+        document.querySelectorAll('.category-checkbox:checked').forEach(categoryCheckbox => {
+            const categoryName = categoryCheckbox.dataset.category;
+            const categoryLevel = parseInt(document.getElementById(`cat_slider_${categoryName}`).value);
+            
+            const category = {
+                categoryName: categoryName,      // Changed from name to categoryName
+                categoryLevel: categoryLevel,    // Changed from level to categoryLevel
+                subCategories: []               // Changed from subCategories to match C# model
+            };
+            
+            const subcategoriesContainer = document.getElementById(`subcategories_${categoryName}`);
+            if (subcategoriesContainer) {
+                subcategoriesContainer.querySelectorAll('.subcategory-checkbox:checked').forEach(subCheckbox => {
+                    const subCategoryName = subCheckbox.dataset.subcategory;
+                    const subCategoryLevel = parseInt(document.getElementById(`sub_slider_${subCategoryName}`).value);
+                    
+                    const subCategory = {
+                        subCategoryName: subCategoryName,        // Changed from name to subCategoryName
+                        subCategoryLevel: subCategoryLevel,      // Changed from level to subCategoryLevel
+                        competencies: []
+                    };
+                    
+                    const competenciesContainer = document.getElementById(`competencies_${subCategoryName}`);
+                    if (competenciesContainer) {
+                        competenciesContainer.querySelectorAll('.competency-checkbox:checked').forEach(compCheckbox => {
+                            const competencyName = compCheckbox.dataset.competency;
+                            const competencyLevel = parseInt(document.getElementById(`comp_slider_${competencyName}`).value);
+                            
+                            // Only add competencies with level > 0 (validation should have caught this already)
+                            if (competencyLevel > 0) {
+                                subCategory.competencies.push({
+                                    competencyName: competencyName,    // Changed from name to competencyName
+                                    competencyLevel: competencyLevel   // Changed from level to competencyLevel
+                                });
+                            }
+                        });
+                    }
+                    
+                    category.subCategories.push(subCategory);
+                });
+            }
+            
+            competencyData.competencies.push(category);
+        });
+
+        console.log('Sending competency data:', competencyData);
+        
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+            return;
+        }
+        
+        fetch(`/api/user/${REGION}/update-competencies`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify(competencyData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Failed to update competencies');
+                });
+            }
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating competencies:', error);
+            showAlert('Update Failed', 'Failed to update competencies. Please try again.', 'error');
+        });
+    });
+
+    function addEducation() {
+        const educationSections = document.getElementById("educationSections");
+        const newId = `new_${Date.now()}`; // Generate a temporary ID for the new education
+        
+        // Generate degree options
+        const degreeOptions = window.availableDegrees && window.availableDegrees.length > 0 
+            ? window.availableDegrees.map(degree => `<option value="${degree}">${degree}</option>`).join('')
+            : '';
+            
+        // Generate field options
+        const fieldOptions = window.availableFields && window.availableFields.length > 0 
+            ? window.availableFields.map(field => `<option value="${field}">${field}</option>`).join('')
+            : '';
+        
+        const educationHtml = `
+            <div class="education-edit-item">
+                <input type="hidden" name="Education[${newId}].Id" value="0" />
+                <div class="form-group">
+                    <label for="Degree-${newId}">Degree:</label>
+                    <select id="Degree-${newId}" name="Education[${newId}].Degree" class="form-control" required>
+                        <option value="">Select Degree</option>
+                        ${degreeOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="Field-${newId}">Field:</label>
+                    <select id="Field-${newId}" name="Education[${newId}].Field" class="form-control" required>
+                        <option value="">Select Field</option>
+                        ${fieldOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="Institution-${newId}">Institution:</label>
+                    <input type="text" id="Institution-${newId}" name="Education[${newId}].Institution" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label for="StartDate-${newId}">Start Date:</label>
+                    <input type="date" id="StartDate-${newId}" name="Education[${newId}].StartDate" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label for="EndDate-${newId}">End Date:</label>
+                    <input type="date" id="EndDate-${newId}" name="Education[${newId}].EndDate" class="form-control" />
+                </div>
+                <button type="button" class="remove-education-btn" onclick="removeEducation(this)">✕</button>
+            </div>
+        `;
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = educationHtml;
+        educationSections.appendChild(tempDiv.firstElementChild);
+    }
+
+    function removeEducation(button) {
+        button.closest('.education-edit-item').remove();
+    }
+
+    // Add these JavaScript functions near your other form handlers
+    function addJob() {
+        const jobSections = document.getElementById("jobSections");
+        const newId = `new_${Date.now()}`; // Generate a temporary ID for the new job
+        
+        const jobHtml = `
+            <div class="job-edit-item">
+                <input type="hidden" name="PreviousWorkPlaces[${newId}].Id" value="0" />
+                <div class="form-group">
+                    <label for="Position-${newId}">Position:</label>
+                    <input type="text" id="Position-${newId}" name="PreviousWorkPlaces[${newId}].Position" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Company-${newId}">Company:</label>
+                    <input type="text" id="Company-${newId}" name="PreviousWorkPlaces[${newId}].Company" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="StartDate-${newId}">Start Date:</label>
+                    <input type="date" id="StartDate-${newId}" name="PreviousWorkPlaces[${newId}].StartDate" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="EndDate-${newId}">End Date:</label>
+                    <input type="date" id="EndDate-${newId}" name="PreviousWorkPlaces[${newId}].EndDate" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Description-${newId}">Description:</label>
+                    <textarea id="Description-${newId}" name="PreviousWorkPlaces[${newId}].Description" class="form-control"></textarea>
+                </div>
+                <button type="button" class="remove-job-btn" onclick="removeJob(this)">✕</button>
+            </div>
+        `;
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = jobHtml;
+        jobSections.appendChild(tempDiv.firstElementChild);
+    }
+
+    function removeJob(button) {
+        button.closest('.job-edit-item').remove();
+    }
+
+    // Add handler for job experience form submission
+    document.querySelector('form[asp-page-handler="UpdateJobExperience"]').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Validate work experience data
+        const validationErrors = validateWorkExperience();
+        if (validationErrors.length > 0) {
+            showErrorModal('Please fix the following work experience errors:', validationErrors);
+            return;
+        }
+        
+        const jobData = {
+            userId: '@Model.Consultant.UserId',
+            jobExperience: []
+        };
+        
+        // Collect all job items
+        document.querySelectorAll('.job-edit-item').forEach(item => {
+            const startDateValue = item.querySelector('input[name$=".StartDate"]').value;
+            const endDateValue = item.querySelector('input[name$=".EndDate"]').value;
+            
+            // Validate required fields before adding
+            const position = item.querySelector('input[name$=".Position"]').value.trim();
+            const company = item.querySelector('input[name$=".Company"]').value.trim();
+            
+            if (!position || !company || !startDateValue) {
+                // Skip invalid entries - validation will catch this
+                return;
+            }
+            
+            jobData.jobExperience.push({
+                id: parseInt(item.querySelector('input[name$=".Id"]').value),
+                position: position,
+                company: company,
+                description: item.querySelector('textarea[name$=".Description"]').value,
+                startDate: new Date(startDateValue),
+                endDate: endDateValue ? new Date(endDateValue) : null
+            });
+        });
+
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+            return;
+        }
+        
+        fetch(`/api/user/${REGION}/update-job-experience`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify(jobData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Failed to update job experience');
+                });
+            }
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating job experience:', error);
+            showErrorModal('Update Failed', ['Failed to update job experience. Please try again.']);
+        });
+    });
+
+    // Add these JavaScript functions near your other form handlers
+    function addReference() {
+        const referencesSections = document.getElementById("referencesSections");
+        const newId = `new_${Date.now()}`; // Generate a temporary ID for the new reference
+        
+        const referenceHtml = `
+            <div class="reference-edit-item">
+                <input type="hidden" name="References[${newId}].Id" value="0" />
+                <div class="form-group">
+                    <label for="Name-${newId}">Name:</label>
+                    <input type="text" id="Name-${newId}" name="References[${newId}].Name" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label for="Company-${newId}">Company:</label>
+                    <input type="text" id="Company-${newId}" name="References[${newId}].Company" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Phone-${newId}">Phone:</label>
+                    <input type="tel" id="Phone-${newId}" name="References[${newId}].Phone" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Email-${newId}">Email:</label>
+                    <input type="email" id="Email-${newId}" name="References[${newId}].Email" class="form-control" />
+                </div>
+                <button type="button" class="remove-reference-btn" onclick="removeReference(this)">✕</button>
+            </div>
+        `;
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = referenceHtml;
+        referencesSections.appendChild(tempDiv.firstElementChild);
+    }
+
+    function removeReference(button) {
+        button.closest('.reference-edit-item').remove();
+    }
+
+    // Add handler for references form submission
+    document.querySelector('form[asp-page-handler="UpdateReferences"]').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Validate references data
+        const validationErrors = validateReferences();
+        if (validationErrors.length > 0) {
+            showErrorModal('Please fix the following reference errors:', validationErrors);
+            return;
+        }
+        
+        const referencesData = {
+            userId: '@Model.Consultant.UserId',
+            references: []
+        };
+        
+        // Collect all reference items
+        document.querySelectorAll('.reference-edit-item').forEach(item => {
+            const name = item.querySelector('input[name$=".Name"]').value.trim();
+            const company = item.querySelector('input[name$=".Company"]').value.trim();
+            const phone = item.querySelector('input[name$=".Phone"]').value.trim();
+            const email = item.querySelector('input[name$=".Email"]').value.trim();
+            
+            // Only add references with at least name and company
+            if (name && company) {
+                referencesData.references.push({
+                    id: parseInt(item.querySelector('input[name$=".Id"]').value) || 0,
+                    name: name,
+                    company: company,
+                    phone: phone,
+                    email: email
+                });
+            }
+        });
+
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+            return;
+        }
+        
+        fetch(`/api/user/${REGION}/update-references`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify(referencesData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Failed to update references');
+                });
+            }
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating references:', error);
+            showAlert('Update Failed', 'Failed to update references. Please try again.', 'error');
+        });
+    });
+
+    const updateLanguagesForm = document.querySelector('form[asp-page-handler="UpdateLanguages"]');
+if (updateLanguagesForm) {
+    updateLanguagesForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const languageData = {
+            userId: '@Model.Consultant.UserId',
+            languages: []
+        };
+        
+        document.querySelectorAll('.language-checkbox:checked').forEach(checkbox => {
+            const languageName = checkbox.dataset.language;
+            const languageLevel = parseInt(document.getElementById(`lang_slider_${languageName}`).value);
+            
+            languageData.languages.push({
+                languageName: languageName,    // Changed to match backend model
+                languageLevel: languageLevel   // Changed to match backend model
+            });
+        });
+
+        console.log('Sending language data:', languageData);
+        
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+            return;
+        }
+        
+        fetch(`/api/user/${REGION}/update-languages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify(languageData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Failed to update languages');
+                });
+            }
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating languages:', error);
+            showAlert('Update Failed', 'Failed to update languages. Please try again.', 'error');
+        });
+    });
+}
+
+    // Tilføj denne JavaScript event handler efter de andre form handlers
+    document.querySelector('form[asp-page-handler="UpdateEducation"]').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Validate education data
+        const validationErrors = validateEducation();
+        if (validationErrors.length > 0) {
+            showErrorModal('Please fix the following education errors:', validationErrors);
+            return;
+        }
+        
+        const educationData = {
+            userId: '@Model.Consultant.UserId',
+            education: []
+        };
+        
+        try {
+            // Collect all education items
+            document.querySelectorAll('.education-edit-item').forEach((item, index) => {
+                const degree = item.querySelector('select[name$=".Degree"]').value.trim();
+                const field = item.querySelector('select[name$=".Field"]').value.trim();
+                const institution = item.querySelector('input[name$=".Institution"]').value.trim();
+                const startDate = item.querySelector('input[name$=".StartDate"]').value;
+                const endDate = item.querySelector('input[name$=".EndDate"]').value;
+                const idInput = item.querySelector('input[name$=".Id"]');
+                
+                // Only add complete education entries
+                if (degree && institution && startDate) {
+                    educationData.education.push({
+                        id: parseInt(idInput.value) || 0,
+                        degree: degree,
+                        field: field || '',
+                        institution: institution,
+                        startDate: new Date(startDate).toISOString(),
+                        endDate: endDate ? new Date(endDate).toISOString() : null
+                    });
+                }
+            });
+
+            console.log('Sending education data:', educationData);
+            
+            const jwtToken = getJwtTokenFromCookie();
+            if (!jwtToken) {
+                throw new Error('Authorization token is missing. Please log in again.');
+            }
+            
+            fetch(`/api/user/${REGION}/update-education`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwtToken}`
+                },
+                body: JSON.stringify(educationData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Failed to update education');
+                    });
+                }
+                console.log('Education updated successfully');
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error updating education:', error);
+                showAlert('Update Failed', 'Failed to update education: ' + error.message, 'error');
+            });
+        } catch (error) {
+            console.error('Validation error:', error);
+            showAlert('Validation Error', error.message, 'error');
+        }
+    });
+
+    document.getElementById('consultantEditForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        // Validate personal information
+        const validationErrors = validatePersonalInfo();
+        if (validationErrors.length > 0) {
+            showErrorModal('Please fix the following errors before saving:', validationErrors);
+            return;
+        }
+        
+        // Get form data ready
+        const postalCodeValue = document.getElementById('PostalCode').value.trim();
+        const contactData = {
+            userId: '@Model.Consultant.UserId',
+            email: document.getElementById('Email').value,
+            phone: document.getElementById('Phone').value,
+            address: document.getElementById('Address').value,
+            city: document.getElementById('City').value,
+            postalCode: postalCodeValue === '' ? 0 : parseInt(postalCodeValue) || 0,
+            country: document.getElementById('Country').value,
+            linkedin: document.getElementById('Linkedin').value,
+            cv: ''
+        };
+
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+            return;
+        }
+
+        try {
+            // Update contact info
+            const updateResponse = await fetch(`/api/user/${REGION}/update-contact`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwtToken}`
+                },
+                body: JSON.stringify(contactData)
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error('Failed to update contact info');
+            }
+
+            location.reload();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to update contact info: ' + error.message);
+        }
+    });
+
+    document.getElementById('interestsEditForm')?.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        const interestsData = {
+            userId: '@Model.Consultant.UserId',
+            interests: document.getElementById('Interests').value.trim()
+        };
+
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            alert('Authorization token is missing. Please log in again.');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/user/${REGION}/update-interests`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwtToken}`
+                },
+                body: JSON.stringify(interestsData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update interests');
+            }
+
+            location.reload();
+        } catch (error) {
+            console.error('Error updating interests:', error);
+            alert('Failed to update interests. Please try again.');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteBtn = document.getElementById('deleteProfileBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async function() {
+                // Get userId from URL
+                const pathParts = window.location.pathname.split('/');
+                const userId = pathParts[pathParts.length - 1];
+                
+                if (!userId) {
+                    showAlert('Error', 'UserId could not be determined.', 'error');
+                    return;
+                }
+                
+                showConfirm(
+                    'Delete Profile', 
+                    'Are you sure you want to delete this profile? This action cannot be undone.',
+                    'danger',
+                    async () => {
+                        // Get JWT token from localStorage using the same function as everywhere else
+                        const jwtToken = getJwtTokenFromCookie();
+                        if (!jwtToken) {
+                            showAlert('Authentication Error', 'Authorization token is missing. Please log in again.', 'error');
+                            return;
+                        }
+                        
+                        try {
+                            const response = await fetch(`/api/user/${REGION}/soft-delete`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${jwtToken}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ userId })
+                            });
+                            if (response.ok) {
+                                showAlert('Success', 'Profile deleted successfully.', 'success', () => {
+                                    window.location.href = '/applicants';
+                                });
+                            } else {
+                                const error = await response.text();
+                                showAlert('Delete Failed', `Failed to delete profile: ${error}`, 'error');
+                            }
+                        } catch (err) {
+                            showAlert('Error', 'An error occurred. Please try again.', 'error');
+                        }
+                    }
+                );
+            });
+        }
+    });
+
+    function toggleEditModeNotes() {
+        const displayMode = document.getElementById('notesDisplayMode');
+        const editMode = document.getElementById('notesEditMode');
+        const editButton = document.getElementById('toggleEditNotesBtn');
+
+        if (displayMode.style.display !== 'none') {
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            editButton.classList.add('active');
+        } else {
+            displayMode.style.display = 'block';
+            editMode.style.display = 'none';
+            editButton.classList.remove('active');
+        }
+    }
+
+    function toggleEditModeInterests() {
+        const displayMode = document.getElementById('interestsDisplayMode');
+        const editMode = document.getElementById('interestsEditMode');
+        const editButton = document.getElementById('toggleEditInterestsBtn');
+
+        if (displayMode.style.display !== 'none') {
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            editButton.classList.add('active');
+        } else {
+            displayMode.style.display = 'block';
+            editMode.style.display = 'none';
+            editButton.classList.remove('active');
+        }
+    }
+
+    function addAdditionalNote() {
+        const notesSections = document.getElementById("notesSections");
+        const noteCount = notesSections.children.length;
+        const newId = noteCount;
+        
+        const noteHtml = `
+            <div class="note-edit-item">
+                <div class="form-group">
+                    <label for="Note-${newId}">Note ${newId + 1}:</label>
+                    <textarea id="Note-${newId}" name="AdditionalNotes[${newId}]" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="button" class="remove-note-btn" onclick="removeAdditionalNote(this)">✕</button>
+            </div>
+        `;
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = noteHtml;
+        notesSections.appendChild(tempDiv.firstElementChild);
+    }
+
+    function removeAdditionalNote(button) {
+        button.closest('.note-edit-item').remove();
+        // Re-index the remaining notes
+        const notesSections = document.getElementById("notesSections");
+        const noteItems = notesSections.querySelectorAll('.note-edit-item');
+        noteItems.forEach((item, index) => {
+            const label = item.querySelector('label');
+            const textarea = item.querySelector('textarea');
+            if (label) label.textContent = `Note ${index + 1}:`;
+            if (textarea) {
+                textarea.id = `Note-${index}`;
+                textarea.name = `AdditionalNotes[${index}]`;
+            }
+        });
+    }
+
+    // Add handler for additional notes form submission
+    document.querySelector('form[asp-page-handler="UpdateAdditionalNotes"]').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const notesData = {
+            userId: '@Model.Consultant.UserId',
+            additionalNotes: []
+        };
+        
+        // Collect all note items
+        document.querySelectorAll('.note-edit-item textarea').forEach(textarea => {
+            if (textarea.value.trim()) {
+                notesData.additionalNotes.push(textarea.value.trim());
+            }
+        });
+
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            alert('Authorization token is missing. Please log in again.');
+            return;
+        }
+        
+        fetch(`/api/user/${REGION}/update-additional-notes`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify(notesData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Failed to update additional notes');
+                });
+            }
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating additional notes:', error);
+            showAlert('Update Failed', 'Failed to update additional notes. Please try again.', 'error');
+        });
+    });
+
+    // Add handler for interests form submission
+    document.querySelector('form[asp-page-handler="UpdateInterests"]').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const interestsData = {
+            userId: '@Model.Consultant.UserId',
+            interests: document.getElementById('Interests').value.trim()
+        };
+
+        const jwtToken = getJwtTokenFromCookie();
+        if (!jwtToken) {
+            alert('Authorization token is missing. Please log in again.');
+            return;
+        }
+        
+        fetch(`/api/user/${REGION}/update-interests`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify(interestsData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Failed to update interests');
+                });
+            }
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating interests:', error);
+            showAlert('Update Failed', 'Failed to update interests. Please try again.', 'error');
+        });
+    });
+
+    // Validation and error handling functions
+    function clearAllFieldErrors() {
+        document.querySelectorAll('.field-error').forEach(field => {
+            field.classList.remove('field-error');
+        });
+    }
+
+    function highlightFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.add('field-error');
+            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function showErrorModal(message, errors = []) {
+        const modal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorList = document.getElementById('errorList');
+        
+        errorMessage.textContent = message;
+        errorList.innerHTML = '';
+        
+        if (errors.length > 0) {
+            errors.forEach(error => {
+                const li = document.createElement('li');
+                li.textContent = error;
+                errorList.appendChild(li);
+            });
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const errorModal = document.getElementById('errorModal');
+        if (event.target === errorModal) {
+            closeErrorModal();
+        }
+    }
+
+    // Add automatic error clearing when users start typing
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clear field errors when user starts typing
+        document.querySelectorAll('input, select, textarea').forEach(field => {
+            field.addEventListener('input', function() {
+                this.classList.remove('field-error');
+            });
+            
+            field.addEventListener('change', function() {
+                this.classList.remove('field-error');
+            });
+        });
+    });
+
+    // Validation functions for different sections
+    function validatePersonalInfo() {
+        clearAllFieldErrors();
+        const errors = [];
+        
+        // Required field validations
+        const requiredFields = [
+            { selector: 'input[name="FirstName"]', label: 'First Name' },
+            { selector: 'input[name="LastName"]', label: 'Last Name' },
+            { selector: 'input[name="Email"]', label: 'Email' },
+            { selector: 'input[name="Phone"]', label: 'Phone' },
+            { selector: 'input[name="Address"]', label: 'Address' },
+            { selector: 'input[name="City"]', label: 'City' },
+            { selector: 'input[name="Country"]', label: 'Country' }
+        ];
+        
+        requiredFields.forEach(field => {
+            const element = document.querySelector(field.selector);
+            if (!element || !element.value.trim()) {
+                errors.push(`${field.label} is required`);
+                if (element) {
+                    element.classList.add('field-error');
+                }
+            }
+        });
+        
+        // Email validation
+        const emailElement = document.querySelector('input[name="Email"]');
+        if (emailElement && emailElement.value && !emailElement.checkValidity()) {
+            errors.push('Please enter a valid email address');
+            emailElement.classList.add('field-error');
+        }
+        
+        return errors;
+    }
+
+    function validateEducation() {
+        clearAllFieldErrors();
+        const errors = [];
+        
+        document.querySelectorAll('.education-edit-item').forEach((section, index) => {
+            const degree = section.querySelector('select[name$=".Degree"]');
+            const institution = section.querySelector('input[name$=".Institution"]');
+            const startYear = section.querySelector('input[name$=".StartDate"]');
+            const endYear = section.querySelector('input[name$=".EndDate"]');
+            
+            if (degree && degree.value === '') {
+                errors.push(`Education ${index + 1}: Please select a degree`);
+                degree.classList.add('field-error');
+            }
+            
+            if (institution && !institution.value.trim()) {
+                errors.push(`Education ${index + 1}: Institution is required`);
+                institution.classList.add('field-error');
+            }
+            
+            if (startYear && !startYear.value) {
+                errors.push(`Education ${index + 1}: Start date is required`);
+                startYear.classList.add('field-error');
+            }
+            
+            if (startYear && endYear && startYear.value && endYear.value) {
+                if (new Date(startYear.value) > new Date(endYear.value)) {
+                    errors.push(`Education ${index + 1}: Start date cannot be later than end date`);
+                    startYear.classList.add('field-error');
+                    endYear.classList.add('field-error');
+                }
+            }
+        });
+        
+        return errors;
+    }
+
+    function validateWorkExperience() {
+        clearAllFieldErrors();
+        const errors = [];
+        
+        document.querySelectorAll('.job-edit-item').forEach((section, index) => {
+            const position = section.querySelector('input[name$=".Position"]');
+            const company = section.querySelector('input[name$=".Company"]');
+            const startDate = section.querySelector('input[name$=".StartDate"]');
+            const endDate = section.querySelector('input[name$=".EndDate"]');
+            
+            if (position && !position.value.trim()) {
+                errors.push(`Work Experience ${index + 1}: Position is required`);
+                position.classList.add('field-error');
+            }
+            
+            if (company && !company.value.trim()) {
+                errors.push(`Work Experience ${index + 1}: Company is required`);
+                company.classList.add('field-error');
+            }
+            
+            if (startDate && !startDate.value) {
+                errors.push(`Work Experience ${index + 1}: Start date is required`);
+                startDate.classList.add('field-error');
+            }
+            
+            if (startDate && endDate && startDate.value && endDate.value) {
+                if (new Date(startDate.value) > new Date(endDate.value)) {
+                    errors.push(`Work Experience ${index + 1}: Start date cannot be later than end date`);
+                    startDate.classList.add('field-error');
+                    endDate.classList.add('field-error');
+                }
+            }
+        });
+        
+        return errors;
+    }
+
+    function validateReferences() {
+        clearAllFieldErrors();
+        const errors = [];
+        
+        document.querySelectorAll('.reference-edit-item').forEach((section, index) => {
+            const name = section.querySelector('input[name$=".Name"]');
+            const position = section.querySelector('input[name$=".Position"]');
+            const company = section.querySelector('input[name$=".Company"]');
+            const email = section.querySelector('input[name$=".Email"]');
+            
+            if (name && !name.value.trim()) {
+                errors.push(`Reference ${index + 1}: Name is required`);
+                name.classList.add('field-error');
+            }
+            
+            if (position && !position.value.trim()) {
+                errors.push(`Reference ${index + 1}: Position is required`);
+                position.classList.add('field-error');
+            }
+            
+            if (company && !company.value.trim()) {
+                errors.push(`Reference ${index + 1}: Company is required`);
+                company.classList.add('field-error');
+            }
+            
+            if (email && email.value && !email.checkValidity()) {
+                errors.push(`Reference ${index + 1}: Please enter a valid email address`);
+                email.classList.add('field-error');
+            }
+        });
+        
+        return errors;
+    }
+
+    // Confirm Modal Functions
+    function showConfirm(title, message, type = 'default', onConfirm = null) {
+        const modal = document.getElementById('confirmModal');
+        const header = document.getElementById('confirmHeader');
+        const messageDiv = document.getElementById('confirmMessage');
+        const confirmButton = document.getElementById('confirmButton');
+        
+        header.textContent = title;
+        messageDiv.textContent = message;
+        
+        // Set button style based on type
+        confirmButton.className = 'confirm-modal-button confirm';
+        if (type === 'danger') {
+            confirmButton.classList.add('danger');
+        }
+        
+        // Store the callback function
+        confirmCallback = onConfirm;
+        
+        modal.style.display = 'block';
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').style.display = 'none';
+        confirmCallback = null;
+    }
+
+    function confirmAction() {
+        if (confirmCallback && typeof confirmCallback === 'function') {
+            confirmCallback();
+        }
+        closeConfirmModal();
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        const alertModal = document.getElementById('alertModal');
+        const confirmModal = document.getElementById('confirmModal');
+        const errorModal = document.getElementById('errorModal');
+        
+        if (event.target === alertModal) {
+            closeAlertModal();
+        }
+        if (event.target === confirmModal) {
+            closeConfirmModal();
+        }
+        if (event.target === errorModal) {
+            closeErrorModal();
+        }
+    }
+
+    </script>
+</body>
+
+</html>
+

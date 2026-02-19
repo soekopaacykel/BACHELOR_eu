@@ -1,0 +1,112 @@
+/* Alert Modal Styles */
+.alert-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.alert-modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: none;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.alert-modal-header {
+    color: #007bff;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.alert-modal-header::before {
+    content: "ℹ️";
+    margin-right: 10px;
+    font-size: 1.5em;
+}
+
+.alert-modal-header.success {
+    color: #28a745;
+}
+
+.alert-modal-header.success::before {
+    content: "✅";
+}
+
+.alert-modal-header.warning {
+    color: #ffc107;
+}
+
+.alert-modal-header.warning::before {
+    content: "⚠️";
+}
+
+.alert-modal-header.error {
+    color: #dc3545;
+}
+
+.alert-modal-header.error::before {
+    content: "❌";
+}
+
+.alert-modal-message {
+    margin: 15px 0;
+    line-height: 1.5;
+    color: #333;
+}
+
+.alert-modal-buttons {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.alert-modal-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.alert-modal-button:hover {
+    background-color: #0056b3;
+}
+
+.alert-modal-button.success {
+    background-color: #28a745;
+}
+
+.alert-modal-button.success:hover {
+    background-color: #1e7e34;
+}
+
+.alert-modal-button.warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.alert-modal-button.warning:hover {
+    background-color: #e0a800;
+}
+
+.alert-modal-button.error {
+    background-color: #dc3545;
+}
+
+.alert-modal-button.error:hover {
+    background-color: #c82333;
+}

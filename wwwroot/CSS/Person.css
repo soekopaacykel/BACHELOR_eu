@@ -1,0 +1,1287 @@
+body {
+    font-family: 'Helvetica Neue', sans-serif;
+    background: linear-gradient(135deg, #00534C, #00855A);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+
+/* -- Content Container -- */
+.content-container {
+    position: relative;
+    background-color: white;
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+/* -- Header -- */
+.header-bar {
+    background: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    color: #00534C;
+    border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.header-logo {
+    margin-right: 10px;
+    margin-top: -10px; 
+}
+
+.header-title {
+    font-size: 1.5rem;
+}
+
+/* -- Menu Bar -- */
+.consultant-menu-bar {
+    display: flex;
+    gap: 20px;
+    margin-right: 0px;
+}
+#admin-link {
+    /* Giv det et specielt udseende, fx: */
+    background-color: #00534C!important;
+ }
+
+.consultant-menu-bar a {
+    display: flex;
+    justify-content: center; /* Centrerer elementerne horisontalt */
+    align-items: center; /* Centrerer elementerne vertikalt */
+    color: #00534C;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+}
+
+.consultant-menu-bar a:hover {
+    background-color: #f1f1f1;
+    color: #00855A;
+}
+
+/* -- Menu Item Add Styling -- */
+.consultant-menu-bar .menu-item-add {
+    text-decoration: none;
+    color: white;
+    background-color: #00855A;
+    font-weight: 600;
+    padding: -5px 10px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+    margin-left: auto;  /* Centrering horisontalt */
+    margin-right: auto; /* Centrering horisontalt */
+}
+
+.back-button {
+    top: 120px;
+    left: 30px;
+    font-size: 1.2rem;  /* Mindre tekst */
+    font-weight: normal;
+    color: #000000;
+    text-decoration: none;
+    background: none;
+    border: none;
+    position: absolute;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    z-index: 9999;  /* Sørg for at knappen er øverst */
+    padding: 5px 10px;  /* Giv lidt plads omkring knappen */
+}
+
+.back-icon {
+    font-size: 2.1rem;  /* Større pil */
+    margin-right: 5px;  /* Afstand mellem pil og tekst */
+}
+
+.back-button:hover {
+    color: #00855A;  /* Hover farve for både pil og tekst */
+}
+
+.back-button:hover .back-icon {
+    color: inherit;  /* Sørg for at pilens farve ændrer sig ved hover */
+}
+
+.back-button:hover .back-text {
+    color: inherit;  /* Sørg for at tekstens farve ændrer sig ved hover */
+}
+
+
+/* -- Consultant Header Bar -- */
+.consultant-header-bar {
+    background: white;
+    padding: 20px;
+    padding-bottom: 50px;
+    margin-top: 10px;
+    display: flex;
+    align-items: flex-start;
+    color: #00534C;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 20px;
+    position: relative;
+    border-bottom: 1px solid #ddd;
+    z-index: 1;
+    margin-left: 50px;
+}
+
+.profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 20px;
+    margin-top: 50px;
+    position: relative;
+}
+
+.consultant-header-bar .profile-picture {
+    width: 130px;
+    height: 150px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.profile-edit-button {
+    position: absolute;
+    top: 160px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.consultant-header-info {
+    flex: 1;
+    font-size: 1.25rem;
+    color: #00534C;
+    margin-top: 60px;
+}
+
+.consultant-header-info h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #013323;
+}
+
+.consultant-header-info p {
+    font-weight: 500;
+}
+
+.consultant-name {
+    font-size: 24px;              /* Større skriftstørrelse for navnet */
+    font-weight: bold;            /* Fed skrift */
+    color: #333333;               /* Mørk grå farve */
+    margin-bottom: -5px;          /* Lidt margin under */
+}
+
+.availability-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 0px;
+    vertical-align: middle;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3); /* Let skygge for dybde */
+    transition: all 0.3s ease-in-out; /* Blød overgang ved hover */
+    cursor: pointer;
+}
+
+/* Grøn prik med glow */
+.available {
+    background-color: #28a745;
+    box-shadow: 0 0 2px rgba(40, 167, 69, 0.8); /* Glow effekt */
+}
+
+/* Rød prik med glow */
+.unavailable {
+    background-color: #dc3545;
+    box-shadow: 0 0 2px rgba(220, 53, 69, 0.8); /* Glow effekt */
+}
+.availability-dot:hover {
+    position: relative;
+}
+
+/* Tooltip styles for availability dots */
+.availability-dot.available:hover::after {
+    content: "Available now";
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #00534C;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.availability-dot.unavailable:hover::after {
+    content: "Available from: " attr(data-available);
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #00534C;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.availability-dot.available-interval:hover::after {
+    content: "Available in: " attr(data-available);
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #00534C;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.availability-dot.available-interval {
+    background-color: #007bff;
+    box-shadow: 0 0 2px rgba(0, 123, 255, 0.8);
+}
+.user-role {
+    font-size: 16px;              /* Mindre skriftstørrelse for rollen */
+    color: #00534C;               /* Grøn farve for rollen */
+    font-weight: normal;          /* Ikke fed skrift */
+    margin-bottom: 10px; 
+    border-bottom: solid 1.5px #ddd;         /* Lidt margin under */
+    display: inline-block;
+}
+
+.consultant-summary {
+    font-size: 17px;              /* Lidt mindre skriftstørrelse */
+    color: #555555;               /* Grå farve for resuméet */
+    line-height: 1.6;             /* Øger linjeafstanden for bedre læsbarhed */
+    white-space: pre-wrap;        /* Sørger for, at linjeskift vises korrekt */
+}
+
+
+/* Når Bepa er true */
+.Bepa-indicator-true {
+    background: linear-gradient(45deg, #00534C, #00855A);  /* Grøn baggrund */
+    color: white;             /* Hvid tekst */
+    font-weight: bold;        /* Fed skrift */
+    font-size: 13px;          /* Justeret fontstørrelse */
+    padding: 5px 8px;       /* Lidt padding for at gøre boksen større */
+    border-radius: 8px;      /* Afrundede hjørner */
+    display: inline-block;    /* Sørger for, at elementet kun fylder den nødvendige plads */
+    text-align: center;       /* Centrerer teksten */
+}
+.Bepa-indicator-true, .confirmed-indicator-true,.confirmed-indicator-false {
+    display: inline-block;  /* Sørger for at de vises på samme linje */
+    margin-right: -5px;      /* Lidt afstand mellem de to elementer */
+}
+
+.confirmed-indicator-true {
+    color: #00855A;           /* Mørkegrøn tekstfarve (svarer til din BEPA-grøn) */
+    font-weight: bold;        /* Fed skrift */
+    font-size: 18px;          /* Samme fontstørrelse som BEPA */
+    padding: 5px 8px;         /* Lidt padding for at matche BEPA */
+    border-radius: 8px;       /* Afrundede hjørner */
+    display: inline-block;    /* Sørger for at elementet vises på samme linje */
+    text-align: center;       /* Centrerer teksten */
+}
+
+.confirmed-indicator-false {
+    color: #878787;           /* Mørkegrøn tekstfarve (svarer til din BEPA-grøn) */
+    font-weight: bold;        /* Fed skrift */
+    font-size: 18px;          /* Samme fontstørrelse som BEPA */
+    padding: 5px 8px;         /* Lidt padding for at matche BEPA */
+    border-radius: 8px;       /* Afrundede hjørner */
+    display: inline-block;    /* Sørger for at elementet vises på samme linje */
+    text-align: center;       /* Centrerer teksten */
+}
+
+
+/* -- Private Notes Section -- */
+
+.private-notes-container {
+    background-color: #F7FAF7;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    max-height: 300px;
+}
+
+.notes-container {
+    flex-grow: 1; /* Gør det muligt at tage al tilgængelig plads */
+    overflow-y: auto;
+    max-height: 300px; /* Kun listen scroller */
+    padding-right: 10px; /* Undgå overlapning med scrollbar */
+}
+
+.fixed-button-container {
+    text-align: center;
+    padding-top: 10px;
+    background: #F7FAF7; /* Sikrer at baggrunden matcher */
+}
+
+
+.notes-list {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 20px;
+}
+
+.note-item {
+    border-bottom: 1px solid #D3D3D3;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.note-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.note-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.note-author {
+    font-weight: 600;
+    color: #00534C;
+    font-size: 0.9rem;
+}
+
+.note-text {
+    font-size: 1rem;
+    color: #575756;
+    line-height: 1.4;
+}
+
+.note-popup {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.note-popup-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+}
+.delete-note-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: red;
+    color: white;
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 20px;
+}
+
+.delete-note-btn:hover {
+    background: darkred;
+}
+.close-popup {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+}
+
+/* -- Note Form -- */
+.note-form {
+    background-color: #F7FAF7;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+}
+
+/* Form control specific styling (your existing styles might not cover textareas specifically) */
+.note-form .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.note-form .form-control:focus {
+    border-color: #00855A;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 133, 90, 0.2);
+}
+
+/* -- Rating Stars -- */
+.consultant-rating-container {
+    position: absolute;
+    right: 40px;
+    bottom: 25px;
+}
+
+.consultant-rating-stars {
+    display: flex;
+    gap: 5px;
+}
+
+.consultant-star-icon {
+    width: 24px;
+    height: 24px;
+    fill: #ddd;
+    transition: fill 0.2s;
+}
+
+.consultant-star-filled {
+    fill: #FFD700;
+    filter: drop-shadow(0 0 1px rgba(107, 109, 51, 0.6));
+}
+
+.consultant-star-empty {
+    fill: #ddd;
+}
+
+/* -- Consultant Section Container -- */
+.consultant-section-container {
+    display: grid;
+    grid-template-columns: 37% 60%;
+    gap: 30px;
+}
+
+.consultant-info-header-text-contact {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 10px;
+
+}
+
+/* -- Left Column (kontaktinfo og kompetencer) -- */
+.consultant-left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Mellemrum mellem de to bokse */
+}
+
+/* -- Contact Information Section -- */
+.consultant-info-section {
+    background: linear-gradient(45deg,  #00614F, #00805A);  /* Grøn baggrund */
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.363);
+}
+
+.consultant-info-header {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.consultant-info-section ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.consultant-info-section ul li {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #ffffff;
+}
+
+ul li img.contact-icon {
+    width: 20px;         /* Juster størrelsen af billederne */
+    height: 20px;        /* Juster højden af billederne */
+    margin-right: 10px;  /* Giver lidt afstand mellem billedet og teksten */
+}
+
+
+.consultant-info-section a {
+    color: #ffffff; /* Grøn farve til LinkedIn */
+    text-decoration: none;
+}
+
+.consultant-info-section a:hover {
+    text-decoration: underline;
+}
+
+/* -- Competency and Language Sections -- */
+.consultant-competency-section, .consultant-language-section {
+    background-color: #F7FAF7;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.consultant-competency-header, .consultant-language-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.competency-header, .language-header, .consultant-level-header, .language-level-header {
+    font-weight: 600;
+    color: #00534C;
+    font-size: 1.25rem;
+}
+
+/* Language Section Styling */
+.consultant-language-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-top: 20px;
+    border-top: 1px solid #D3D3D3;
+}
+
+/* Language Category */
+.language-category {
+    font-weight: 600;
+    color: #00534C;
+    font-size: 1.25rem;
+    flex: 7; /* Ensures it takes up the same space as competency-category */
+}
+
+/* Competencies and languages */
+.competencies-and-levels, .languages-and-levels {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.competency-category, .competency-subcategory, .language-item, .competency-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #D3D3D3;
+}
+
+.competency-subcategory {
+    margin-left: 20px;
+}
+
+.competency-item {
+    margin-left: 50px;
+}
+
+.consultant-competencies, .consultant-language-name {
+    flex: 7; /* Kompetencer og sprog tager 7/8 af pladsen */
+}
+
+.consultant-levels, .consultant-language-levels {
+    flex: 1;
+    text-align: center;
+}
+
+/* Styling for level text */
+.category-level, .subcategory-level, .language-level, .competency-level {
+    font-size: 1rem;
+    color: #3C3C3B;
+    text-align: right;
+}
+
+/* Level Header for Competency and Language */
+.language-level-header, .consultant-level-header {
+    text-align: right;
+    font-weight: 600;
+    color: #00534C;
+    font-size: 1.25rem;
+    flex: 1; /* Ensures the Level header is aligned to the right */
+}
+
+/* Category and Subcategory Sliders */
+.category-slider,
+.subcategory-slider {
+    width: 100px;
+    margin: 0 10px;
+    vertical-align: middle;
+}
+
+/* Category and Subcategory Level Span */
+.category-level-span,
+.subcategory-level-span {
+    min-width: 20px;
+    display: inline-block;
+    text-align: center;
+}
+
+/* Category and Subcategory Header */
+.category-header,
+.subcategory-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* -- Competency Edit Mode Styling -- */
+/* Compact Competency Edit Mode with Nice Styling */
+.competencies-edit-container {
+    background-color: #F7FAF7;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.category-edit-item {
+    margin-bottom: 12px;
+    padding: 8px;
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.checkbox-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.checkbox-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 160px; /* Fast bredde til slider container */
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+/* Different margins for each level's slider container */
+.category-edit-item > .checkbox-container > .slider-container {
+    margin-right: 0;
+}
+
+.subcategory-edit-item > .checkbox-container > .slider-container {
+    margin-right: -3px;
+}
+
+.competence-container > .checkbox-container > .slider-container {
+    margin-right: -6px;
+}
+
+/* Restore the nice slider styling */
+input[type="range"] {
+    width: 100px;
+    height: 4px;
+    background: #ddd;
+    border-radius: 4px;
+}
+
+.level-span {
+    min-width: 24px;
+    text-align: center;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100px;
+    height: 4px;
+    background: #ddd;
+    border-radius: 4px;
+    margin: 0 6px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #00534C;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background .3s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: #00855A;
+}
+
+input[type="range"]:disabled {
+    opacity: 0.5;
+}
+
+/* Restore level indicator styling */
+.level-span {
+    min-width: 24px;
+    padding: 1px 6px;
+    font-size: 0.8rem;
+    background: #00534C;
+    color: white;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.subcategories-list, .competencies-list {
+    margin-left: 16px;
+    padding-left: 8px;
+    border-left: 2px solid #00534C;
+}
+
+.category-name, .subcategory-name, .competency-name {
+    font-size: 0.9rem;
+    color: #00534C;
+    font-weight: 500;
+}
+
+.category-name {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.subcategory-edit-item, .competence-container {
+    margin: 6px 0;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.subcategory-edit-item:hover, .competence-container:hover {
+    background-color: #f5f9f8;
+}
+
+/* Checkbox styling */
+.checkbox-container input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #00534C;
+    cursor: pointer;
+}
+
+/* -- Language Edit Mode Styling */
+.languages-edit-container {
+    background-color: #F7FAF7;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.language-edit-item {
+    margin-bottom: 12px;
+    padding: 8px;
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.language-edit-item .checkbox-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.language-edit-item .checkbox-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.language-edit-item .slider-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 160px;
+    justify-content: flex-end;
+    margin-left: auto;
+    margin-right: 0;
+}
+
+.language-name {
+    font-size: 0.9rem;
+    color: #00534C;
+    font-weight: 500;
+}
+
+.language-edit-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #00534C;
+    cursor: pointer;
+}
+
+.language-slider {
+    width: 100px;
+    height: 4px;
+    -webkit-appearance: none;
+    background: #ddd;
+    border-radius: 4px;
+    margin: 0 6px;
+}
+
+.language-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #00534C;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background .3s ease;
+}
+
+.language-slider::-webkit-slider-thumb:hover {
+    background: #00855A;
+}
+
+.language-slider:disabled {
+    opacity: 0.5;
+}
+
+/* -- Right Column -- */
+.consultant-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* -- Consultant Section Styling (Education & Work Experience) -- */
+.consultant-section {
+    background-color: #F7FAF7;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+/* -- Styling for Education Item Header (Degree + Field + Dates + Institution) -- */
+/* Grundlæggende styling for education-elementer */
+.education-item {
+    font-size: 1rem;
+    color: #575756;
+    margin-bottom: 10px;
+    width: 100%; /* Sikrer, at elementet strækker sig over hele bredden */
+}
+
+/* Tilføj margin mellem education-elementer */
+.education-item + .education-item {
+    margin-top: 10px; /* Øg mellemrum mellem de enkelte uddannelser */
+}
+
+/* Tilføj en svag grå linje mellem education-elementerne */
+.education-item:not(:last-child) {
+    border-bottom: 1px solid #D3D3D3; /* Lyse grå linje */
+    padding-bottom: 30px; /* Sørg for lidt luft under linjen */
+}
+
+/* Degree + Field + Institution på samme linje */
+.education-item .education-header {
+    display: inline; /* På samme linje */
+}
+
+/* Datoer højrejusteret */
+.education-item .dates {
+    display: inline-block; /* Datoerne er inline men kan få margin */
+    font-size: 0.9rem;
+    color: #676767;
+    margin-left: 10px; /* Afstand mellem degree/field og datoer */
+    text-align: right; /* Justerer datoerne til højre */
+    width: 100%; /* Gør så elementet strækker sig over hele bredden */
+}
+
+/* -- Education Edit Mode Styling */
+.education-edit-container { 
+    background-color: transparent; /* Remove background color */
+    padding: 20px 0; /* Remove horizontal padding, keep vertical */
+    border-radius: 0; /* Remove border radius */
+    box-shadow: none; 
+    margin-top: 20px;
+    border-top: none; 
+}
+
+.education-edit-item {
+    margin-bottom: 20px;
+}
+
+.education-edit-item .form-group label {
+    font-weight: 600;
+    color: #00534C;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.education-edit-item .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    margin-top: 5px;
+}
+
+.education-edit-item .form-control:focus {
+    border-color: #00855A;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 133, 90, 0.2);
+}
+
+/* Add spacing between edit items */
+.education-edit-item + .education-edit-item {
+    border-top: 1px solid #D3D3D3; /* Separating line between items */
+    padding-top: 20px;
+}
+
+/* Buttons inside the edit mode */
+.education-edit-container .form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* -- Job Experience Edit Mode Styling -- */
+.job-edit-container {
+    background-color: #F7FAF7; /* Same as standard mode */
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    border-top: 2px solid #D3D3D3; /* Separating line */
+}
+
+.job-edit-item {
+    margin-bottom: 20px;
+}
+
+.job-edit-item .form-group label {
+    font-weight: 600;
+    color: #00534C;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.job-edit-item .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    margin-top: 5px;
+}
+
+.job-edit-item .form-control:focus {
+    border-color: #00855A;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 133, 90, 0.2);
+}
+
+/* Add spacing between edit items */
+.job-edit-item + .job-edit-item {
+    border-top: 1px solid #D3D3D3; /* Separating line between items */
+    padding-top: 20px;
+}
+
+/* Buttons inside the edit mode */
+.job-edit-container .form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* -- Styling for Job Item Header (Position + Company + Dates) -- */
+/* Grundlæggende styling for job-elementer */
+.job-item {
+    font-size: 1rem;
+    color: #575756;
+    margin-bottom: 10px;
+    width: 100%; /* Sikrer, at elementet strækker sig over hele bredden */
+}
+/* Tilføj margin mellem job-elementer */
+.job-item + .job-item {
+    margin-top: 10px; /* Øg mellemrum mellem de enkelte job */
+}
+/* Tilføj en svag grå linje mellem job-elementerne */
+.job-item:not(:last-child) {
+    border-bottom: 1px solid #D3D3D3; /* Lyse grå linje */
+    padding-bottom: 30px; /* Sørg for lidt luft overlinjen */
+}
+
+
+/* Position + at + Company på samme linje */
+.job-item .job-header {
+    display: inline; /* På samme linje */
+}
+
+/* Datoer højrejusteret */
+.job-item .dates {
+    display: inline-block; /* Datoerne er inline men kan få margin */
+    font-size: 0.9rem;
+    color: #676767;
+    margin-left: 10px; /* Afstand mellem position og datoer */
+    text-align: right; /* Justerer datoerne til højre */
+    width: 100%; /* Gør så elementet strækker sig over hele bredden */
+}
+
+/* Beskrivelsen på ny linje */
+.job-item .description {
+    display: block;
+    margin-top: 8px;
+    font-size: 1rem;
+    color: #575756;
+}
+
+
+
+.consultant-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #00534C;
+    margin-bottom: 10px;
+}
+
+.consultant-section ul {
+    padding-left: 20px;
+}
+
+.consultant-section ul li {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #575756;
+}
+
+#consultantEditForm .form-control {
+    background-color: transparent;  /* Gør baggrunden gennemsigtig */
+    color: white;                   /* Ændrer tekstfarven til hvid */
+    border: none;                   /* Fjerner den almindelige kant */
+    border-bottom: 1px solid #ffffff; /* Tilføjer en understregning */
+    margin-bottom: 5px;
+}
+
+#consultantEditForm .form-control:focus {
+    background-color: transparent;  /* Gør baggrunden gennemsigtig ved fokus */
+    color: white;                   /* Ændrer tekstfarven til hvid ved fokus */
+    border-bottom: 1px solid #ffffff; /* Ændrer farven på understregningen ved fokus */
+}
+
+#consultantEditForm .form-group label {
+    color: white;                   /* Ændrer label-tekstfarven til hvid */
+    margin-top: 5px;
+}
+
+.form-buttons .btn {
+    margin-top: 15px;
+    color: white;
+    padding: 5px 10px;              /* Indre afstand (padding) */
+    font-size: 16px;                 /* Tekststørrelse */
+    border: 1px solid #ffffff !important;             
+    border-radius: 4px;              /* Afrund hjørner */
+    cursor: pointer;                /* Ændre musemarkør til pointer */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+    text-align: center;             /* Centrer tekst i knappen */
+    display: inline-flex;           /* Brug flexbox for centering af indholdet */
+    justify-content: center;        /* Centrer horisontalt */
+    align-items: center; 
+}
+
+.form-buttons {
+    display: flex;                  /* Gør containeren til en flex container */
+    justify-content: center;         /* Centrer knapperne horisontalt */
+    gap: 10px;                       /* Giver lidt afstand mellem knapperne */
+}
+
+#consultantEditForm .form-group label {
+    color: white;                   /* Ændrer label-tekstfarven til hvid */
+    margin-top: 5px;
+}
+
+.form-buttons .btn {
+    margin-top: 15px;
+    color: white;
+    padding: 5px 10px;              /* Indre afstand (padding) */
+    font-size: 16px;                 /* Tekststørrelse */
+    border: 1px solid #00534C!important; /* Green border */
+    border-radius: 4px;              /* Afrund hjørner */
+    cursor: pointer;                /* Ændre musemarkør til pointer */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+    text-align: center;             /* Centrer tekst i knappen */
+    display: inline-flex;           /* Brug flexbox for centering af indholdet */
+    justify-content: center;        /* Centrer horisontalt */
+    align-items: center; 
+}
+
+.form-buttons .btn:hover {
+    background-color: #00534C;;      /* Darker green when hovered */
+    border-color: #00534C;;          /* Darker green border on hover */
+}
+
+.form-buttons .btn:active {
+    background-color: #00534C;      /* Even darker green when clicked */
+    border-color: #00534C;         /* Darker border on click */
+}
+
+.form-buttons .btn-edit-save-green {
+    background-color: #00534C;      /* Green background for save button */
+    border: 1px solid #00534C;      /* Green border for save button */
+}
+
+.form-buttons .btn-edit-save-green:hover {
+    background-color: #00534C;      /* Darker green on hover */
+}
+
+.form-buttons .btn-edit-cancel-green {
+    background-color: transparent; /* Transparent background for cancel button */
+    color: #00534C;                 /* Green text color */
+    border: 1px solid #00534C;      /* Green border for cancel button */
+}
+
+.form-buttons .btn-edit-cancel-green:hover {
+    background-color: #f8f9fa;      /* Light gray background on hover */
+    color: #00534C;                 /* Dark green text color on hover */
+}
+
+/* -- Hierarchical Structure Styling -- */
+.category-edit-item {
+    margin-bottom: 15px;
+}
+
+.subcategories-list {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 2px solid #eee;
+}
+
+.competencies-list {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 2px solid #eee;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.level-span {
+    min-width: 20px;
+    text-align: center;
+}
+
+.category-slider,
+.subcategory-slider,
+.competency-slider {
+    width: 100px;
+}
+
+/* Tooltip styles for availability dots */
+.availability-dot.available:hover::after {
+    content: "Available now";
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #00534C;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.availability-dot.unavailable:hover::after {
+    content: "Available from: " attr(data-available);
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #00534C;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.availability-dot.available-interval:hover::after {
+    content: "Available in: " attr(data-available);
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #00534C;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.availability-dot.available-interval {
+    background-color: #007bff;
+    box-shadow: 0 0 2px rgba(0, 123, 255, 0.8);
+}

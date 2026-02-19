@@ -1,0 +1,205 @@
+@page "/SuccessPage"
+@model SuccessPageModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #00534C, #00855A);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-container {
+            background-color: white;
+            width: 100%;
+            max-width: 600px;
+            width: 400px;
+            text-align: center;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+
+        .alert {
+            background-color: #F7FAF7;
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .alert h5 {
+            color: #00534C;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .copy-button {
+            background-color: #00855A !important;
+            border-color: #00855A !important;
+            color: white;
+            transition: all 0.3s ease;
+            padding: 8px 20px;
+            font-weight: 600;
+        }
+
+        .copy-button:hover {
+            background-color: #00534C !important;
+            border-color: #00534C !important;
+        }
+
+        .copy-button.copied {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+        }
+
+        .btn-primary {
+            background-color: #00855A;
+            border-color: #00855A;
+            color: white;
+            font-weight: 600;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #00534C;
+            border-color: #00534C;
+        }
+
+        .btn-outline-secondary {
+            color: #00534C;
+            border-color: #00534C;
+            font-weight: 600;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f8f9fa;
+            color: #00855A;
+            border-color: #00855A;
+        }
+
+        .text-success {
+            color: #00855A !important;
+        }
+
+        .form-control {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px 15px;
+        }
+
+        .form-control:focus {
+            border-color: #00855A;
+            box-shadow: 0 0 0 0.2rem rgba(0, 133, 90, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="text-center mb-4">
+            <i class="fas fa-check-circle text-success" style="font-size: 48px;"></i>
+            <h2 class="mt-3">Success!</h2>
+            <p class="text-muted">The profile has been created successfully.</p>
+        </div>
+
+        @if (TempData["GeneratedPassword"] != null)
+        {
+            <div class="alert alert-info">
+                <h5>Generated Password</h5>
+                <div class="input-group">
+                    <input type="text" class="form-control" value="@TempData["GeneratedPassword"]" id="generatedPassword" readonly>
+                    <button class="btn btn-outline-secondary copy-button" type="button" onclick="copyToClipboard()">
+                        Copy
+                    </button>
+                </div>
+                <small class="text-muted mt-2 d-block">Please save this password.</small>
+            </div>
+        }
+        
+        @if (TempData["EmailSent"] != null && (bool)TempData["EmailSent"])
+        {
+            <div class="alert alert-success">
+                <h5>Invitation Email Sent</h5>
+                <p class="mb-1">An invitation email has been sent to:</p>
+                <p class="fw-bold">@TempData["EmailAddress"]</p>
+                <small class="text-muted">The link will expire in 15 minutes.</small>
+            </div>
+        }
+        
+        @if (TempData["EmailError"] != null)
+        {
+            <div class="alert alert-danger">
+                <h5>Email Error</h5>
+                <p class="mb-0">@TempData["EmailError"]</p>
+            </div>
+        }
+        
+        <div class="text-center mt-4" style="margin-top: 50px !important;">
+            <a href="#" id="backToHomeBtn" class="btn btn-primary me-2">Back to Home</a>
+            <a href="/NewProfile" class="btn btn-outline-secondary">Create Another Profile</a>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/auth.js"></script>
+    <script>
+        // Helper to get JWT token from cookies
+        function getJwtTokenFromCookie() {
+            const match = document.cookie.match(/(?:^|; )jwt_token=([^;]*)/)
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+        
+        // Handle region-aware redirection
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const region = urlParams.get('region');
+            const backToHomeBtn = document.getElementById('backToHomeBtn');
+            
+            if (backToHomeBtn) {
+                if (region && (region === 'VN' || region === 'DK')) {
+                    backToHomeBtn.href = `/Consultants?region=${region}`;
+                } else {
+                    // Get from session if available, otherwise show error
+                    backToHomeBtn.href = '/Consultants';
+                }
+            }
+        });
+
+        
+
+        function copyToClipboard() {
+            const copyText = document.getElementById('generatedPassword');
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            
+            const button = document.querySelector('.copy-button');
+            button.classList.add('copied');
+            button.textContent = 'Copied!';
+            
+            setTimeout(() => {
+                button.classList.remove('copied');
+                button.textContent = 'Copy';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
