@@ -10,7 +10,7 @@ namespace CVAPI.Repos
     public class CompetenciesRepository
     {
         private readonly CosmosClient _cosmosClient;
-        private readonly string _databaseName = "BEPAVEXA";
+        private readonly string _databaseName = "DK";
 
         public CompetenciesRepository(CosmosClient cosmosClient)
         {
@@ -26,37 +26,18 @@ namespace CVAPI.Repos
         // Hent alle predefinerede kompetencer (Kategorier, Subkategorier og Kompetencer)
         public async Task<PredefinedData> GetPredefinedDataAsync(string region = "DK")
         {
-            try
+            var container = GetContainer(region);
+            var query = "SELECT * FROM c WHERE c.id = 'predefinedData'"; // Filtrering efter id
+            var iterator = container.GetItemQueryIterator<PredefinedData>(query);
+            var result = new List<PredefinedData>();
+
+            while (iterator.HasMoreResults)
             {
-                var container = GetContainer(region);
-                var query = "SELECT * FROM c WHERE c.id = 'predefinedData'";
-                var iterator = container.GetItemQueryIterator<dynamic>(query);
-                
-                while (iterator.HasMoreResults)
-                {
-                    var response = await iterator.ReadNextAsync();
-                    if (response.Count > 0)
-                    {
-                        var item = response.First();
-                        
-                        // Deserialize the dynamic object to PredefinedData
-                        var json = JsonConvert.SerializeObject(item);
-                        var predefinedData = JsonConvert.DeserializeObject<PredefinedData>(json);
-                        return predefinedData;
-                    }
-                }
-            }
-            catch
-            {
-                // If deserialization fails, return empty object
+                var response = await iterator.ReadNextAsync();
+                result.AddRange(response);
             }
 
-            return new PredefinedData 
-            { 
-                Id = "predefinedData",
-                Competencies = new List<CompetencyCategory>(),
-                Languages = new List<Language>()
-            };
+            return result.FirstOrDefault(); // Returnerer det første matchende dokument
         }
     }
 }

@@ -8,7 +8,7 @@ namespace CVAPI.Repos
     public class ExperienceRepository
     {
         private readonly CosmosClient _cosmosClient;
-        private readonly string _databaseName = "BEPAVEXA"; // Samme database som UserRepository
+        private readonly string _databaseName = "DK"; // Samme database som UserRepository
 
         public ExperienceRepository(CosmosClient cosmosClient)
         {
