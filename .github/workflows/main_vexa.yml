@@ -53,7 +53,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'VEXA'
+          app-name: 'BACHELOR'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_83784A7583404ACBBFAEC419C58A8B86 }}
           package: ./deploy-folder
