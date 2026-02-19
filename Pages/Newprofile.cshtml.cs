@@ -54,12 +54,18 @@ namespace CVAPI.Pages
         // Get data for the form on GET request
         public async Task OnGetAsync()
         {
-            // Get region from session
-            var region = GetRegion();
-            
-            // Get predefined data from repository
-            var predefinedData = await _competenciesRepository.GetPredefinedDataAsync(region);
-            Categories = predefinedData?.Competencies;
+            try
+            {
+                // Get predefined data from repository
+                var predefinedData = await _competenciesRepository.GetPredefinedDataAsync("DK");
+                Categories = predefinedData?.Competencies ?? new List<CompetencyCategory>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in OnGetAsync: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                Categories = new List<CompetencyCategory>();
+            }
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -73,7 +79,7 @@ namespace CVAPI.Pages
                 }
                 
                 // Get predefined data again when returning to the page due to validation error
-                var predefinedData = await _competenciesRepository.GetPredefinedDataAsync(GetRegion());
+                var predefinedData = await _competenciesRepository.GetPredefinedDataAsync("DK");
                 Categories = predefinedData?.Competencies;
                 
                 return Page();
@@ -112,7 +118,7 @@ namespace CVAPI.Pages
             NewApplicant.DateAdded = DateTime.UtcNow;
 
             // Save the applicant
-            await _userRepository.AddApplicantAsync(NewApplicant, GetRegion());
+            await _userRepository.AddApplicantAsync(NewApplicant, "DK");
 
             Console.WriteLine("Applicant successfully saved in Cosmos DB!");
 
