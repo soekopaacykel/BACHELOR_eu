@@ -40,7 +40,7 @@ namespace CVAPI.Pages
             _userRepository = userRepository;
         }
 
-        private string GetRegion() => HttpContext.Session.GetString("UserRegion") ?? "DK";
+        private string GetRegion() => "DK";
 
         // Helper method to check admin authorization
         private bool IsAuthorizedAdmin()
