@@ -4,8 +4,8 @@ document.querySelector('#login-form').addEventListener('submit', async function 
     const email = document.querySelector('#email').value;
     const password = document.querySelector('#password').value;
     
-    // Get current region from RegionManager or default to DK
-    const region = window.RegionManager ? window.RegionManager.getCurrentRegion() : 'DK';
+    // Always use DK region
+    const region = 'DK';
 
     try {
         const response = await fetch(`/api/user/${region}/login`, {

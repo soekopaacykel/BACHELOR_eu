@@ -117,9 +117,6 @@
             <center><img src="~/Images/BEPALogo.png" width="200"><br /><br />
             <center><img src="~/Images/VEXALogo.png" width="70" class="vexalogo"><br /><br />
             
-            <!-- Region Selector -->
-            <div id="regionSelectorContainer" style="margin-bottom: 15px; width: 100%;"></div>
-            
             <input type="text" id="email" name="Email" class="form-control" placeholder="Email" required />
             <input type="password" id="password" name="Password" class="form-control" placeholder="Password" required />
             <button type="submit" class="btn-primary">Login</button>
@@ -127,27 +124,12 @@
     </main>
     <script src="~/JS/regionManager.js"></script>
     <script>
-        // Initialize region selector
-        document.addEventListener('DOMContentLoaded', function() {
-            RegionManager.createRegionSelector('regionSelectorContainer', function(newRegion) {
-                // Store the selected region when it changes
-                RegionManager.setCurrentRegion(newRegion);
-            });
-        });
-        
         async function redirectToConsultants() {
             const email = document.querySelector('#email').value;
             const password = document.querySelector('#password').value;
-            const region = RegionManager.getCurrentRegion();
+            const region = 'DK';
 
             console.log('Login attempt:', { email, region });
-            console.log('Region type:', typeof region);
-            console.log('Region value:', JSON.stringify(region));
-
-            if (!region) {
-                showAlert('Region Required', 'Please select a region before logging in.', 'error');
-                return;
-            }
 
             try {
                 const loginUrl = `/api/user/${region}/login`;
