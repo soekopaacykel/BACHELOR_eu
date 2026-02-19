@@ -776,7 +776,7 @@
 
     // Funktion til at hente og fylde sprogsektionerne
     function fetchAndFillLanguages() {
-        fetch('/api/competencies/GetLanguages')
+        fetch('/api/competencies/DK/GetLanguages')
             .then(response => response.json())
             .then(languages => {
                 // Når sprogene er hentet, viser vi dem med en slider
@@ -841,7 +841,7 @@
 
     function fetchAndFillDropdowns() {
         // Hent Degrees fra API
-        fetch('/api/competencies/GetDegrees')
+        fetch('/api/competencies/DK/GetDegrees')
             .then(response => response.json())
             .then(degrees => {
                 fillDropdown('degreeSelect', degrees);
@@ -849,10 +849,10 @@
             .catch(error => console.error('Fejl ved hentning af Degrees:', error));
 
         // Hent Fields og Engineering Fields fra API
-        fetch('/api/competencies/GetFields')
+        fetch('/api/competencies/DK/GetFields')
             .then(response => response.json())
             .then(fields => {
-                fetch('/api/competencies/GetEngineeringFields')
+                fetch('/api/competencies/DK/GetEngineeringFields')
                     .then(response => response.json())
                     .then(engineeringFields => {
                         // Kombiner Fields og Engineering Fields i én liste
