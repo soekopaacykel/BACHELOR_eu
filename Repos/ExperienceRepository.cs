@@ -24,100 +24,124 @@ namespace CVAPI.Repos
         // Hent Degrees
         public async Task<List<string>> GetDegreesAsync(string region)
         {
-            var container = GetContainer(region);
-            var query = container.GetItemQueryIterator<dynamic>(
-                new QueryDefinition("SELECT c.Degrees FROM c WHERE c.id = 'predefinedDegrees'")
-            );
-
-            var degrees = new List<string>();
-
-            while (query.HasMoreResults)
+            try
             {
-                var response = await query.ReadNextAsync();
-                foreach (var item in response)
+                var container = GetContainer(region);
+                var query = container.GetItemQueryIterator<dynamic>(
+                    new QueryDefinition("SELECT c.Degrees FROM c WHERE c.id = 'predefinedDegrees'")
+                );
+
+                var degrees = new List<string>();
+
+                while (query.HasMoreResults)
                 {
-                    // Hvis Degrees findes og er et objekt
-                    if (item.Degrees != null)
+                    var response = await query.ReadNextAsync();
+                    foreach (var item in response)
                     {
-                        // Hvis Degrees er et array eller en liste
-                        foreach (var degree in item.Degrees)
+                        // Hvis Degrees findes og er et objekt
+                        if (item.Degrees != null)
                         {
-                            if (degree.DegreeName != null)
+                            // Hvis Degrees er et array eller en liste
+                            foreach (var degree in item.Degrees)
                             {
-                                degrees.Add(degree.DegreeName.ToString());
+                                if (degree.DegreeName != null)
+                                {
+                                    degrees.Add(degree.DegreeName.ToString());
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            return degrees;
+                return degrees;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetDegreesAsync: {ex.Message}");
+                return new List<string>();
+            }
         }
 
         // Hent Fields
         public async Task<List<string>> GetFieldsAsync(string region)
         {
-            var container = GetContainer(region);
-            var query = container.GetItemQueryIterator<dynamic>(
-                new QueryDefinition("SELECT c.Fields FROM c WHERE c.id = 'predefinedFields'")
-            );
-
-            var fields = new List<string>();
-
-            while (query.HasMoreResults)
+            try
             {
-                var response = await query.ReadNextAsync();
-                foreach (var item in response)
+                var container = GetContainer(region);
+                var query = container.GetItemQueryIterator<dynamic>(
+                    new QueryDefinition("SELECT c.Fields FROM c WHERE c.id = 'predefinedFields'")
+                );
+
+                var fields = new List<string>();
+
+                while (query.HasMoreResults)
                 {
-                    // Hvis Fields findes og er et objekt
-                    if (item.Fields != null)
+                    var response = await query.ReadNextAsync();
+                    foreach (var item in response)
                     {
-                        // Hvis Fields er et array eller en liste
-                        foreach (var field in item.Fields)
+                        // Hvis Fields findes og er et objekt
+                        if (item.Fields != null)
                         {
-                            if (field.FieldName != null)
+                            // Hvis Fields er et array eller en liste
+                            foreach (var field in item.Fields)
                             {
-                                fields.Add(field.FieldName.ToString());
+                                if (field.FieldName != null)
+                                {
+                                    fields.Add(field.FieldName.ToString());
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            return fields;
+                return fields;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetFieldsAsync: {ex.Message}");
+                return new List<string>();
+            }
         }
 
         // Hent Engineering Fields
         public async Task<List<string>> GetEngineeringFieldsAsync(string region)
         {
-            var container = GetContainer(region);
-            var query = container.GetItemQueryIterator<dynamic>(
-                new QueryDefinition("SELECT c.Fields FROM c WHERE c.id = 'predefinedEngineeringFields'")
-            );
-
-            var engineeringFields = new List<string>();
-
-            while (query.HasMoreResults)
+            try
             {
-                var response = await query.ReadNextAsync();
-                foreach (var item in response)
+                var container = GetContainer(region);
+                var query = container.GetItemQueryIterator<dynamic>(
+                    new QueryDefinition("SELECT c.Fields FROM c WHERE c.id = 'predefinedEngineeringFields'")
+                );
+
+                var engineeringFields = new List<string>();
+
+                while (query.HasMoreResults)
                 {
-                    // Hvis Fields findes og er et objekt
-                    if (item.Fields != null)
+                    var response = await query.ReadNextAsync();
+                    foreach (var item in response)
                     {
-                        // Hvis Fields er et array eller en liste
-                        foreach (var field in item.Fields)
+                        // Hvis Fields findes og er et objekt
+                        if (item.Fields != null)
                         {
-                            if (field.FieldName != null)
+                            // Hvis Fields er et array eller en liste
+                            foreach (var field in item.Fields)
                             {
-                                engineeringFields.Add(field.FieldName.ToString());
+                                if (field.FieldName != null)
+                                {
+                                    engineeringFields.Add(field.FieldName.ToString());
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            return engineeringFields;
+                return engineeringFields;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetEngineeringFieldsAsync: {ex.Message}");
+                return new List<string>();
+            }
         }
     }
 }
