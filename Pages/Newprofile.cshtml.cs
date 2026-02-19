@@ -34,7 +34,7 @@ namespace CVAPI.Pages
             _oneTimeLinkService = oneTimeLinkService; // Assign the service
         }
 
-        private string GetRegion() => HttpContext.Session.GetString("UserRegion") ?? "DK";
+        private string GetRegion() => "DK";
 
         // Property to hold fetched data
         public List<CompetencyCategory> Categories { get; set; }
