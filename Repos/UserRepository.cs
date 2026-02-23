@@ -639,7 +639,7 @@ namespace CVAPI.Repos
         )
         {
             // Use the base URL from configuration
-            var baseUrl = _configuration["ApiBaseUrl"] ?? "https://bachelorappservice.germanywestcentral-01.azurewebsites.net/api/user";
+            var baseUrl = _configuration["ApiBaseUrl"] ?? "https://bachelor-ete0e0e5d4cphjg7.germanywestcentral-01.azurewebsites.net/api/user";
             using var client = new HttpClient();
             var requestBody = new { UserId = userId, Note = note };
 
@@ -660,7 +660,7 @@ namespace CVAPI.Repos
         )
         {
             // Use the base URL from configuration
-            var baseUrl = _configuration["ApiBaseUrl"] ?? "https://bachelorappservice.germanywestcentral-01.azurewebsites.net/api/user";
+            var baseUrl = _configuration["ApiBaseUrl"] ?? "https://bachelor-ete0e0e5d4cphjg7.germanywestcentral-01.azurewebsites.net/api/user";
             using var client = new HttpClient();
             var response = await client.GetAsync($"{baseUrl}/{region}/{userId}/private-notes");
 

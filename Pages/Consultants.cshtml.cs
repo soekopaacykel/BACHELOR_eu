@@ -22,7 +22,7 @@ namespace CVAPI.Pages
         // Filter/search properties
         public string? SearchQuery { get; set; }
         public bool? IsAvailableFilter { get; set; }
-        public string RegionFilter { get; set; } = "DK"; // Default region is DK
+        public string RegionFilter { get; set; } // Region is set dynamically
 
         // Helper method to get region with authorization check
         private string GetEffectiveRegion(string? urlRegion = null)

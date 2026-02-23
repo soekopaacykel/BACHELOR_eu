@@ -34,7 +34,11 @@ namespace CVAPI.Pages
             _oneTimeLinkService = oneTimeLinkService; // Assign the service
         }
 
-        private string GetRegion() => "DK";
+        private string GetRegion()
+        {
+            // Try to get region from session, fallback to default
+            return HttpContext.Session.GetString("UserRegion") ?? "DK";
+        }
 
         // Property to hold fetched data
         public List<CompetencyCategory> Categories { get; set; }
@@ -57,7 +61,7 @@ namespace CVAPI.Pages
             try
             {
                 // Get predefined data from repository
-                var predefinedData = await _competenciesRepository.GetPredefinedDataAsync("DK");
+                var predefinedData = await _competenciesRepository.GetPredefinedDataAsync(GetRegion());
                 Categories = predefinedData?.Competencies ?? new List<CompetencyCategory>();
             }
             catch (Exception ex)
@@ -79,7 +83,7 @@ namespace CVAPI.Pages
                 }
                 
                 // Get predefined data again when returning to the page due to validation error
-                var predefinedData = await _competenciesRepository.GetPredefinedDataAsync("DK");
+                var predefinedData = await _competenciesRepository.GetPredefinedDataAsync(GetRegion());
                 Categories = predefinedData?.Competencies;
                 
                 return Page();
@@ -118,7 +122,7 @@ namespace CVAPI.Pages
             NewApplicant.DateAdded = DateTime.UtcNow;
 
             // Save the applicant
-            await _userRepository.AddApplicantAsync(NewApplicant, "DK");
+            await _userRepository.AddApplicantAsync(NewApplicant, GetRegion());
 
             Console.WriteLine("Applicant successfully saved in Cosmos DB!");
 

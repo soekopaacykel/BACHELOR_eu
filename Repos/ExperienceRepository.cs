@@ -8,7 +8,7 @@ namespace CVAPI.Repos
     public class ExperienceRepository
     {
         private readonly CosmosClient _cosmosClient;
-        private readonly string _databaseName = "DK"; // Samme database som UserRepository
+        private readonly string _databaseName = "DK"; // Use correct database name
 
         public ExperienceRepository(CosmosClient cosmosClient)
         {
@@ -18,7 +18,7 @@ namespace CVAPI.Repos
         private Container GetContainer(string region)
         {
             var database = _cosmosClient.GetDatabase(_databaseName);
-            return database.GetContainer(region); // Region, f.eks. "DK"
+            return database.GetContainer(region); // Region, e.g., "DK" or "VN"
         }
 
         // Hent Degrees

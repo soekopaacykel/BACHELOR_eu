@@ -15,16 +15,19 @@ namespace CVAPI.Controllers
         private readonly UserRepository _userRepository;
         private readonly ILogger<UserController> _logger; // Tilføj loggeren
         private readonly JwtTokenService _jwtTokenService; // Tilføj JwtTokenService
+        private readonly SharePointUploader _sharePointUploader; // Add this line
 
         public UserController(
             UserRepository userRepository,
             JwtTokenService jwtTokenService,
-            ILogger<UserController> logger
+            ILogger<UserController> logger,
+            SharePointUploader sharePointUploader
         )
         {
             _userRepository = userRepository;
             _jwtTokenService = jwtTokenService;
             _logger = logger;
+            _sharePointUploader = sharePointUploader; // Add this line
         }
 
         // Get a specific user by UserId through the repository
@@ -245,6 +248,13 @@ namespace CVAPI.Controllers
                     string generatedPassword = PasswordHelper.GenerateRandomPassword(12);
                     newApplicant.Password = PasswordHelper.HashPassword(generatedPassword);
                     // You may want to store or return this generated password
+                }
+
+                // Fjern CV-håndtering fra denne metode da det nu håndteres separat
+                // CV filename kommer fra den separate upload process
+                if (!string.IsNullOrEmpty(newApplicant.CV))
+                {
+                    _logger.LogInformation($"CV filename received: {newApplicant.CV}");
                 }
 
                 // Ensure profile picture URL is preserved if it was uploaded
@@ -940,7 +950,86 @@ namespace CVAPI.Controllers
             }
         }
 
+        [HttpPost("{region}/upload-cv")]
+        public async Task<IActionResult> UploadCv([FromRoute] string region, IFormFile cv)
+        {
+            try
+            {
+                Console.WriteLine(
+                    $"Received CV upload request. File name: {cv?.FileName}, Size: {cv?.Length} bytes"
+                );
 
+                if (cv == null || cv.Length == 0)
+                {
+                    return BadRequest(new { error = "No file selected" });
+                }
+
+                // Using the SharePointUploader with default folder (CV folder)
+                var sharePointUrl = await _sharePointUploader.UploadToSharePoint(cv);
+
+                if (string.IsNullOrEmpty(sharePointUrl))
+                {
+                    return BadRequest(new { error = "Failed to get URL from SharePoint" });
+                }
+
+                return Ok(
+                    new
+                    {
+                        success = true,
+                        url = sharePointUrl,
+                        fileName = cv.FileName,
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in CV upload: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("{region}/upload-profile-picture")]
+        public async Task<IActionResult> UploadProfilePicture(
+            [FromRoute] string region,
+            [FromForm(Name = "profilePicture")] IFormFile file
+        )
+        {
+            _logger.LogInformation($"UploadProfilePicture endpoint hit. Region: {region}");
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(new { error = "No file selected" });
+                }
+
+                // Validate file type
+                if (!file.ContentType.StartsWith("image/"))
+                {
+                    return BadRequest(new { error = "Only image files are allowed" });
+                }
+
+                // Use the dedicated method for profile pictures, just like CV uploads
+                var sharePointUrl = await _sharePointUploader.UploadProfilePicture(file);
+
+                if (string.IsNullOrEmpty(sharePointUrl))
+                {
+                    return BadRequest(new { error = "Failed to get URL from SharePoint" });
+                }
+
+                // Return the URL directly, like we do with CV uploads
+                return Ok(new
+                {
+                    success = true,
+                    url = sharePointUrl,
+                    fileName = file.FileName
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error uploading profile picture: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
 
         [HttpGet("{region}/{userId}/profile-picture")]
         public async Task<IActionResult> GetProfilePicture(string region, string userId)
@@ -1185,6 +1274,7 @@ namespace CVAPI.Controllers
                 consultant.PostalCode = model.PostalCode;
                 consultant.Country = model.Country;
                 consultant.Linkedin = model.Linkedin;
+                consultant.CV = model.CV;
 
                 await _userRepository.UpdateConsultantAsync(consultant, region);
                 return Ok(new { success = true });
@@ -1206,6 +1296,7 @@ namespace CVAPI.Controllers
             public int PostalCode { get; set; }
             public string Country { get; set; }
             public string Linkedin { get; set; }
+            public string CV { get; set; }
         }
 
         public class UpdateReferencesModel

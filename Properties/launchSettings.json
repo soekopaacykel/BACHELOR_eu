@@ -24,7 +24,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "https://bachelorappservice.germanywestcentral-01.azurewebsites.net",
+      "applicationUrl": "https://bachelor-ete0e0e5d4cphjg7.germanywestcentral-01.azurewebsites.net",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
