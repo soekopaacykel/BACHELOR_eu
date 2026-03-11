@@ -1,8 +1,10 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CVAPI", "CVAPI.csproj", "{31E11321-719A-A30A-C92C-777A75A10377}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CVAPI.OperationalTests", "..\CVAPI.OperationalTests\CVAPI.OperationalTests.csproj", "{1A49BD99-7D50-45B9-8102-0872C8C76B85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,6 +16,10 @@ Global
 		{31E11321-719A-A30A-C92C-777A75A10377}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31E11321-719A-A30A-C92C-777A75A10377}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31E11321-719A-A30A-C92C-777A75A10377}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A49BD99-7D50-45B9-8102-0872C8C76B85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A49BD99-7D50-45B9-8102-0872C8C76B85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A49BD99-7D50-45B9-8102-0872C8C76B85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A49BD99-7D50-45B9-8102-0872C8C76B85}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

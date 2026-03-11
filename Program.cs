@@ -120,6 +120,14 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 
+// Health check endpoint for operational tests
+app.MapGet("/health", () => Results.Ok(new {
+    status = "healthy",
+    timestamp = DateTime.UtcNow,
+    version = "2.3.1",
+    environment = app.Environment.EnvironmentName
+}));
+
 app.Run();
 
 // Metode til at konfigurere Azure Key Vault
