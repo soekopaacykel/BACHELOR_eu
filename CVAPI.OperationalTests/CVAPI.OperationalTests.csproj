@@ -26,6 +26,9 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="FluentAssertions" />
+    <Using Include="CVAPI.OperationalTests.Config" />
+    <Using Include="CVAPI.OperationalTests.Reports" />
   </ItemGroup>
 
 </Project>
