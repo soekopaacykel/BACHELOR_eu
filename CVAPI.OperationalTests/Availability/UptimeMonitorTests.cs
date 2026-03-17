@@ -9,6 +9,8 @@ namespace CVAPI.OperationalTests.Availability;
 /// BEMÆRK: Til hurtig verifikation kan UptimeDurationMinutes sættes til 1 i appsettings.test.json.
 /// Output: uptime-procent.
 /// </summary>
+[Collection("Availability")]
+[Trait("Category", "Availability")]
 public class UptimeMonitorTests
 {
     private readonly HttpClient _httpClient;

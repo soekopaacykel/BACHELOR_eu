@@ -4,11 +4,15 @@ using System.Net;
 namespace CVAPI.OperationalTests.Availability;
 
 /// <summary>
-/// T5 — Endpoint Availability
-/// Tester alle kendte API-endpoints fra konfigurationen systematisk.
-/// HTTP 200 og 401 betragtes som "tilgængelig" — 401 betyder endpoint svarer men kræver auth.
-/// Output: tilgængelige endpoints / totale endpoints, liste over fejlende.
+/// T5 — Endpoint Availability.
+/// Skelner mellem:
+///   - Fuldstændig utilgængelig (exception/timeout) → testen fejler
+///   - Server svarer men med fejl (5xx) → registreres som fund, testen advarer men fejler ikke
+///   - Server svarer OK (2xx/3xx/4xx) → tilgængelig
+/// HTTP 500 på Azure-endpoints er et vigtigt fund til bacheloropgaven.
 /// </summary>
+[Collection("Availability")]
+[Trait("Category", "Availability")]
 public class EndpointAvailabilityTests
 {
     private readonly HttpClient _httpClient;

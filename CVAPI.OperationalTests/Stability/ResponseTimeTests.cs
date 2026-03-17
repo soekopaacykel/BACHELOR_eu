@@ -3,6 +3,8 @@ using System.Net;
 
 namespace CVAPI.OperationalTests.Stability;
 
+[Collection("Stability")]
+[Trait("Category", "Stability")]
 /// <summary>
 /// S2 — Response Time Consistency Test
 /// Måler svartidsvariationen over N requests med 5 warm-up requests inden målingen.

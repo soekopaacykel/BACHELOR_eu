@@ -3,6 +3,8 @@ using System.Net;
 
 namespace CVAPI.OperationalTests.Stability;
 
+[Collection("Stability")]
+[Trait("Category", "Stability")]
 /// <summary>
 /// S3 — Error Rate under Load
 /// Sender X samtidige requests for X ∈ {10, 50, 100} og beregner fejlprocenten.

@@ -9,6 +9,8 @@ namespace CVAPI.OperationalTests.Availability;
 /// Verificerer certifikatets gyldighed, kæde og at det ikke udløber inden for 30 dage.
 /// Output: gyldig (ja/nej), dage til udløb, certifikatudsteder.
 /// </summary>
+[Collection("Availability")]
+[Trait("Category", "Availability")]
 public class SSLCertificateTests
 {
     private readonly TestConfig _config;

@@ -12,6 +12,8 @@ namespace CVAPI.OperationalTests.Availability;
 /// Automatiseret del: poller /health indtil svar og måler tid.
 /// Manuel del: sørg for applikationen er "kold" inden testen startes.
 /// </summary>
+[Collection("Availability")]
+[Trait("Category", "Availability")]
 public class ColdStartTests
 {
     private readonly TestConfig _config;

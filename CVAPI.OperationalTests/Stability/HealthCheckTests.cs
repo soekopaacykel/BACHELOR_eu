@@ -4,6 +4,8 @@ using System.Text.Json;
 
 namespace CVAPI.OperationalTests.Stability;
 
+[Collection("Stability")]
+[Trait("Category", "Stability")]
 /// <summary>
 /// S1 — Health Check Test
 /// Verificerer at /health svarer HTTP 200 med korrekt JSON-struktur og måler responstid.

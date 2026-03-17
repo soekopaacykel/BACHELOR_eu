@@ -8,6 +8,8 @@ namespace CVAPI.OperationalTests.Availability;
 /// Måler DNS-opslag-tid for applikationens domæne 20 gange med op til 3 retries ved timeout.
 /// Output: gennemsnitlig DNS-opslag tid (ms), antal retries.
 /// </summary>
+[Collection("Availability")]
+[Trait("Category", "Availability")]
 public class DNSResolutionTests
 {
     private readonly TestConfig _config;
