@@ -35,11 +35,6 @@ public class DatabaseResilienceTests
     [Trait("TestId", "S4")]
     public async Task DatabaseResilience_ShouldNotDegradeOverTime()
     {
-        // Bruger /health som stabilitetsproxy — returnerer timestamp og environment,
-        // som kræver at app-runtime (og underliggende infrastruktur) er oppe.
-        // Specifik DB-test kræver JWT-token; se ConfigValidationTests for DB-tilgængelighed.
-        var url = TestConfig.Instance.GetBaseUrl(env) + TestConfig.Instance.GetHealthEndpoint(env);
-        var n = TestConfig.Instance.RepeatCount;
         var url = _config.GetBaseUrl(_env) + DbEndpointPath;
         var repeatCount = _config.RepeatCount;
 
@@ -53,27 +48,20 @@ public class DatabaseResilienceTests
                 var response = await _httpClient.GetAsync(url);
                 sw.Stop();
 
-                // Alt under 500 = DB og server kører. 5xx og timeouts er reelle fejl.
-                var success = (int)response.StatusCode < 500;
-                if (!success) errors++;
-
-                measurements.Add(sw.Elapsed.TotalMilliseconds);
-
-                Report.Record(new TestResult
-                {
-                    TestName = "DatabaseResilience",
-                    TestCategory = "Stability",
-                    Environment = env,
-                    Passed = success,
-                    ValueMs = sw.Elapsed.TotalMilliseconds,
-                    Iteration = i + 1,
-                    ErrorMessage = success ? null : $"HTTP {(int)response.StatusCode} — 5xx server/DB fejl"
-                });
-
-                await Task.Delay(500); // 500ms pause mellem kald for at undgå rate-limiting
                 var success = response.StatusCode == HttpStatusCode.OK ||
                               response.StatusCode == HttpStatusCode.Unauthorized;
                 timings.Add((i, sw.ElapsedMilliseconds, success));
+
+                Report.Record(new TestResult
+                {
+                    TestName = "S4_DatabaseResilience",
+                    TestCategory = "Stability",
+                    Environment = _env,
+                    Passed = success,
+                    Iteration = i,
+                    ValueMs = sw.ElapsedMilliseconds,
+                    ErrorMessage = success ? null : $"HTTP {(int)response.StatusCode}"
+                });
             }
             catch (Exception ex)
             {

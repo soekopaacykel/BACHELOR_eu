@@ -16,6 +16,8 @@ namespace CVAPI.OperationalTests.Availability;
 ///
 /// Opret en dedikeret testbruger i begge miljøer — brug IKKE produktionsdata.
 /// </summary>
+[Collection("Availability")]
+[Trait("Category", "Availability")]
 public class AuthFlowTests
 {
     private readonly HttpClient _httpClient;

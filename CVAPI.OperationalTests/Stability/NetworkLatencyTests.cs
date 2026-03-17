@@ -9,6 +9,8 @@ namespace CVAPI.OperationalTests.Stability;
 /// Bruges til at skelne netværksforsinkelse fra applikationsforsinkelse i analysen.
 /// Output: TCP gennemsnit (ms), jitter/standardafvigelse (ms).
 /// </summary>
+[Collection("Stability")]
+[Trait("Category", "Stability")]
 public class NetworkLatencyTests
 {
     private readonly TestConfig _config;
