@@ -1,11 +1,6 @@
-using System.Diagnostics;
-using System.Net;
-using CVAPI.OperationalTests.Config;
-using CVAPI.OperationalTests.Reports;
-using FluentAssertions;
-
 namespace CVAPI.OperationalTests.Stability;
 
+[Collection("Stability")]
 [Trait("Category", "Stability")]
 public class ResponseTimeTests
 {

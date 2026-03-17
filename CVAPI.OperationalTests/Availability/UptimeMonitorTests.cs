@@ -1,9 +1,3 @@
-using System.Diagnostics;
-using System.Net;
-using CVAPI.OperationalTests.Config;
-using CVAPI.OperationalTests.Reports;
-using FluentAssertions;
-
 namespace CVAPI.OperationalTests.Availability;
 
 /// <summary>
@@ -11,6 +5,7 @@ namespace CVAPI.OperationalTests.Availability;
 /// Poller /health hvert UptimeIntervalSeconds i UptimeDurationMinutes minutter.
 /// OBS: Default er 1440 min (24h) — kør separat med f.eks. TEST_UPTIME_MINUTES=5 for hurtig test.
 /// </summary>
+[Collection("Availability")]
 [Trait("Category", "Availability")]
 public class UptimeMonitorTests
 {

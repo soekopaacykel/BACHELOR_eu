@@ -1,16 +1,10 @@
-using System.Net.Security;
-using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
-using CVAPI.OperationalTests.Config;
-using CVAPI.OperationalTests.Reports;
-using FluentAssertions;
-
 namespace CVAPI.OperationalTests.Availability;
 
 /// <summary>
 /// T3 — SSL/TLS Certifikat Validering.
 /// Verificerer at certifikatet er gyldigt, ikke udløbet og har mere end 30 dage tilbage.
 /// </summary>
+[Collection("Availability")]
 [Trait("Category", "Availability")]
 public class SSLCertificateTests
 {
