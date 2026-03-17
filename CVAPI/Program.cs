@@ -124,8 +124,8 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new {
     status = "healthy",
     timestamp = DateTime.UtcNow,
-    version = "2.3.1",
-    environment = app.Environment.EnvironmentName
+    version = typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown",
+    environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
 }));
 
 app.Run();
