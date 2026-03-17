@@ -6,6 +6,7 @@ namespace CVAPI.OperationalTests.Operations;
 /// Kræver at en deployment sættes i gang manuelt/via pipeline FØR testen køres.
 /// Sæt environment variable DEPLOY_START_UTC til ISO-timestamp (fx 2026-03-17T10:00:00Z).
 /// </summary>
+[Collection("Operations")]
 [Trait("Category", "Operations")]
 public class DeploymentTimeTests
 {

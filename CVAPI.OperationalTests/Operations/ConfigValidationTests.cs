@@ -6,6 +6,7 @@ namespace CVAPI.OperationalTests.Operations;
 /// - JWT-beskyttet endpoint svarer 401 (ikke 500 = config-fejl)
 /// - DB-endpoint svarer 200 eller 401 (ikke 500)
 /// </summary>
+[Collection("Operations")]
 [Trait("Category", "Operations")]
 public class ConfigValidationTests
 {
@@ -18,7 +19,7 @@ public class ConfigValidationTests
     [InlineData(TestEnvironment.Azure)]
     public async Task Config_JwtEndpointShouldRespondWithout500(TestEnvironment env)
     {
-        var url = TestConfig.Instance.GetBaseUrl(env) + "/api/user/eu/consultants";
+        var url = TestConfig.Instance.GetBaseUrl(env) + "/api/user/DK/consultants";
 
         var sw = Stopwatch.StartNew();
         var response = await _http.GetAsync(url);
@@ -45,7 +46,7 @@ public class ConfigValidationTests
     [InlineData(TestEnvironment.Azure)]
     public async Task Config_DatabaseEndpointShouldRespondWithout500(TestEnvironment env)
     {
-        var url = TestConfig.Instance.GetBaseUrl(env) + "/api/competencies/eu/predefined";
+        var url = TestConfig.Instance.GetBaseUrl(env) + "/api/competencies/DK/predefined";
 
         var sw = Stopwatch.StartNew();
         var response = await _http.GetAsync(url);

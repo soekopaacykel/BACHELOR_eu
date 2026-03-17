@@ -31,7 +31,7 @@ public class AuthFlowTests
         Environment.GetEnvironmentVariable("TEST_USER_PASSWORD");
 
     // Region der bruges til login-endpoint
-    private const string TestRegion = "eu";
+    private const string TestRegion = "DK";
 
     public AuthFlowTests()
     {

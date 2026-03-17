@@ -14,7 +14,16 @@ public static class Report
     private static readonly object _lock = new();
 
     private static readonly string OutputDir = Path.Combine(
-        AppContext.BaseDirectory, "Reports", "output");
+        FindProjectRoot(), "TestResults");
+
+    private static string FindProjectRoot()
+    {
+        // Gå op fra bin/Debug/net8.0 til projektmappen
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !dir.GetFiles("*.csproj").Any())
+            dir = dir.Parent;
+        return dir?.FullName ?? AppContext.BaseDirectory;
+    }
 
     public static void Record(TestResult result)
     {

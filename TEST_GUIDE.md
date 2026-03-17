@@ -26,8 +26,8 @@ Sæt variabler i terminalen inden du kører tests:
 
 ```bash
 export TEST_ENV=Azure
-export TEST_USER_EMAIL="din@email.dk"
-export TEST_USER_PASSWORD="ditPassword"
+export TEST_USER_EMAIL="amelia@bepa.dk"
+export TEST_USER_PASSWORD="HEJ1234"
 ```
 
 ---

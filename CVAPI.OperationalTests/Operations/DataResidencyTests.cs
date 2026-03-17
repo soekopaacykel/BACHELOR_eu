@@ -15,6 +15,7 @@ namespace CVAPI.OperationalTests.Operations;
 ///
 /// Output: server lokation (land/by), IP-adresse, EU-kompatibel (ja/nej).
 /// </summary>
+[Collection("Operations")]
 public class DataResidencyTests
 {
     private readonly HttpClient _httpClient;

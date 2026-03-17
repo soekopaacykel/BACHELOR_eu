@@ -6,6 +6,7 @@ namespace CVAPI.OperationalTests.Operations;
 /// Fuld log-latens måling kræver adgang til log-platformen (Azure Monitor / Seq / Grafana)
 /// og gøres manuelt efter kørsel.
 /// </summary>
+[Collection("Operations")]
 [Trait("Category", "Operations")]
 public class LoggingVerificationTests
 {

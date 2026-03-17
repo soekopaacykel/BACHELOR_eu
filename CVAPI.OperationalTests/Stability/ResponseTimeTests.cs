@@ -38,10 +38,10 @@ public class ResponseTimeTests
     [Fact]
     [Trait("Category", "Stability")]
     [Trait("TestId", "S2")]
-    public async Task ResponseTime_ConsultantsEndpoint_ShouldBeConsistent()
+    public async Task ResponseTime_CompetenciesEndpoint_ShouldBeConsistent()
     {
-        var url = _config.GetBaseUrl(_env) + "/api/user/eu/consultants";
-        await RunResponseTimeTest("S2_ResponseTime_Consultants", url);
+        var url = _config.GetBaseUrl(_env) + "/api/competencies/DK/predefined";
+        await RunResponseTimeTest("S2_ResponseTime_Competencies", url);
     }
 
     private async Task RunResponseTimeTest(string testName, string url)

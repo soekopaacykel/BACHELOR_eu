@@ -18,7 +18,7 @@ public class DatabaseResilienceTests
     private readonly TestEnvironment _env;
 
     // Readonly endpoint der rammer Cosmos DB uden at skrive data
-    private const string DbEndpointPath = "/api/competencies/eu/competencies";
+    private const string DbEndpointPath = "/api/competencies/DK/predefined";
 
     public DatabaseResilienceTests()
     {
