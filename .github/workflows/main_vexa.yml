@@ -21,13 +21,13 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Restore dependencies
-        run: dotnet restore CVAPI.csproj
+        run: dotnet restore CVAPI/CVAPI.csproj
 
       - name: Build
-        run: dotnet build CVAPI.csproj --configuration Release --no-restore
+        run: dotnet build CVAPI/CVAPI.csproj --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish CVAPI.csproj --configuration Release --output ./publish --no-restore
+        run: dotnet publish CVAPI/CVAPI.csproj --configuration Release --output ./publish --no-restore
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
