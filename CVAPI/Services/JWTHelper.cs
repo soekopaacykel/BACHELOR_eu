@@ -7,39 +7,18 @@ using CVAPI.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Azure.Security.KeyVault.Secrets;
-using Azure.Identity;
 
 public class JwtTokenService
 {
     private readonly string _secret;
     private readonly string _issuer;
-    private readonly SecretClient _secretClient;
     private readonly ILogger<JwtTokenService> _logger;
 
     public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger)
     {
         _logger = logger;
-        var keyVaultUrl = configuration["KeyVault:Url"];
-        _secretClient = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
-
-        // Use the same secret names as in Program.cs
-        _secret = GetSecretFromKeyVault("jwt-secret-secret");
-        _issuer = GetSecretFromKeyVault("jwt-issuer");
-    }
-
-    private string GetSecretFromKeyVault(string secretName)
-    {
-        try
-        {
-            var secret = _secretClient.GetSecret(secretName);
-            return secret.Value.Value;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to retrieve {SecretName} from Key Vault", secretName);
-            throw new InvalidOperationException($"Could not retrieve secret '{secretName}' from Key Vault", ex);
-        }
+        _secret = configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey is not configured.");
+        _issuer = configuration["JwtSettings:Issuer"] ?? throw new InvalidOperationException("JwtSettings:Issuer is not configured.");
     }
 
     public string GenerateJwtToken(User user)

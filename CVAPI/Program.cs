@@ -1,6 +1,4 @@
 using System.Text;
-using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using CVAPI.Repos;
 using CVAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,9 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Tilføj logging
 builder.Logging.AddConsole();
-
-// Configure Azure Key Vault secrets
-await ConfigureKeyVaultSecrets(builder);
 
 // Tilføj tjenester til containeren
 builder.Services.AddRazorPages();
@@ -129,38 +124,6 @@ app.MapGet("/health", () => Results.Ok(new {
 }));
 
 app.Run();
-
-// Metode til at konfigurere Azure Key Vault
-static async Task ConfigureKeyVaultSecrets(WebApplicationBuilder builder)
-{
-    var keyVaultUrl = builder.Configuration["KeyVault:Url"];
-
-    if (string.IsNullOrEmpty(keyVaultUrl))
-    {
-        Console.WriteLine("Key Vault URL is not configured.");
-        return;
-    }
-
-    try
-    {
-        // Opret en SecretClient med DefaultAzureCredential
-        var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
-
-        // Hent JWT-hemmeligheder
-        KeyVaultSecret jwtSecretSecret = await client.GetSecretAsync("jwt-secret-secret");
-        KeyVaultSecret jwtIssuerSecret = await client.GetSecretAsync("jwt-issuer");
-
-        // Tilføj hemmeligheder til konfigurationen
-        builder.Configuration["JwtSettings:SecretKey"] = jwtSecretSecret.Value;
-        builder.Configuration["JwtSettings:Issuer"] = jwtIssuerSecret.Value;
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Fejl ved hentning af secrets fra Key Vault: {ex.Message}");
-        // Overvej at kaste undtagelsen, hvis du vil forhindre programstart
-        // throw;
-    }
-}
 
 // Metode til at konfigurere JWT Authentication
 static void ConfigureJwtAuthentication(WebApplicationBuilder builder)
