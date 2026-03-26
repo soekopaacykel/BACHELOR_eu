@@ -1,5 +1,5 @@
 {
   "dotnet": {
-    "proj_build": "CVAPI/CVAPI.csproj"
+    "proj_build": "CVAPI"
   }
 }
