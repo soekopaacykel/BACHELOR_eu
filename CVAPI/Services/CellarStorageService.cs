@@ -67,9 +67,9 @@ namespace CVAPI.Services
         /// <summary>Lists all object keys that start with the given prefix.</summary>
         public async Task<List<string>> ListObjectKeysAsync(string bucket, string prefix)
         {
+            // Use ListObjectsV1 — Cellar (Ceph) does not support list-type=2
             var queryParams = new SortedDictionary<string, string>(StringComparer.Ordinal)
             {
-                ["list-type"] = "2",
                 ["prefix"] = prefix
             };
 
@@ -118,13 +118,14 @@ namespace CVAPI.Services
                 $"x-amz-date:{amzDate}\n";
             const string signedHeaders = "host;x-amz-content-sha256;x-amz-date";
 
-            // Canonical request — CanonicalHeaders already ends with \n so we
-            // concatenate directly (no extra join separator) to avoid a blank line.
+            // Canonical request per AWS Signature V4 spec.
+            // CanonicalHeaders ends with \n — the spec requires one additional \n
+            // (blank line) separating it from SignedHeaders.
             var canonicalRequest =
                 method.Method + "\n" +
                 canonicalUri + "\n" +
                 canonicalQueryString + "\n" +
-                canonicalHeaders +        // ends with \n
+                canonicalHeaders + "\n" +   // blank line required by spec
                 signedHeaders + "\n" +
                 bodyHash;
 
