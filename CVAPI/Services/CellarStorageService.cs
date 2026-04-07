@@ -24,11 +24,16 @@ namespace CVAPI.Services
         public CellarStorageService(IConfiguration configuration, HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _accessKeyId = configuration["Cellar:AccessKeyId"]
-                ?? throw new InvalidOperationException("Cellar:AccessKeyId is not configured.");
-            _secretKey = configuration["Cellar:SecretKey"]
-                ?? throw new InvalidOperationException("Cellar:SecretKey is not configured.");
+            _accessKeyId = configuration["Cellar:AccessKeyId"];
+            _secretKey = configuration["Cellar:SecretKey"];
             _endpoint = configuration["Cellar:Endpoint"] ?? "cellar-c2.services.clever-cloud.com";
+
+            if (string.IsNullOrEmpty(_accessKeyId))
+                throw new InvalidOperationException(
+                    "Cellar:AccessKeyId is not configured. Set the Cellar__AccessKeyId environment variable in Clever Cloud.");
+            if (string.IsNullOrEmpty(_secretKey))
+                throw new InvalidOperationException(
+                    "Cellar:SecretKey is not configured. Set the Cellar__SecretKey environment variable in Clever Cloud.");
         }
 
         /// <summary>Returns the JSON content of an object, or null if it does not exist.</summary>
@@ -113,14 +118,15 @@ namespace CVAPI.Services
                 $"x-amz-date:{amzDate}\n";
             const string signedHeaders = "host;x-amz-content-sha256;x-amz-date";
 
-            // Canonical request
-            var canonicalRequest = string.Join("\n",
-                method.Method,
-                canonicalUri,
-                canonicalQueryString,
-                canonicalHeaders,
-                signedHeaders,
-                bodyHash);
+            // Canonical request — CanonicalHeaders already ends with \n so we
+            // concatenate directly (no extra join separator) to avoid a blank line.
+            var canonicalRequest =
+                method.Method + "\n" +
+                canonicalUri + "\n" +
+                canonicalQueryString + "\n" +
+                canonicalHeaders +        // ends with \n
+                signedHeaders + "\n" +
+                bodyHash;
 
             // Credential scope and string-to-sign
             var credentialScope = $"{dateStamp}/{SigningRegion}/{SigningService}/aws4_request";
