@@ -2,7 +2,6 @@ using System.Text;
 using CVAPI.Repos;
 using CVAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Azure.Cosmos;
 using Microsoft.IdentityModel.Tokens;
 using System.Net;
 using System.Net.Mail;
@@ -16,11 +15,8 @@ builder.Logging.AddConsole();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
 
-// Hent connection string
-var connectionString = builder.Configuration.GetConnectionString("CosmosDB");
-
-// Tilføj CosmosDB klienten som en service
-builder.Services.AddSingleton<CosmosClient>(sp => new CosmosClient(connectionString));
+// Registrer Cellar (S3-kompatibel object storage via Clever Cloud)
+builder.Services.AddHttpClient<CellarStorageService>();
 
 // Registrer repositorier og services
 builder.Services.AddScoped<UserRepository>();

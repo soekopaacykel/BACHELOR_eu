@@ -1,59 +1,30 @@
-using CVAPI.Models;
-using Microsoft.Azure.Cosmos;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using CVAPI.Services;
+using Newtonsoft.Json;
 
 namespace CVAPI.Repos
 {
     public class ExperienceRepository
     {
-        private readonly CosmosClient _cosmosClient;
-        private readonly string _databaseName = "DK"; // Use correct database name
+        private readonly CellarStorageService _storage;
 
-        public ExperienceRepository(CosmosClient cosmosClient)
+        public ExperienceRepository(CellarStorageService storage)
         {
-            _cosmosClient = cosmosClient;
+            _storage = storage;
         }
 
-        private Container GetContainer(string region)
-        {
-            var database = _cosmosClient.GetDatabase(_databaseName);
-            return database.GetContainer(region); // Region, e.g., "DK" or "VN"
-        }
+        private static string GetBucket(string region) =>
+            region.ToUpper() == "VN" ? "bachelor-vn" : "bachelor-dk";
 
-        // Hent Degrees
         public async Task<List<string>> GetDegreesAsync(string region)
         {
             try
             {
-                var container = GetContainer(region);
-                var query = container.GetItemQueryIterator<dynamic>(
-                    new QueryDefinition("SELECT c.Degrees FROM c WHERE c.id = 'predefinedDegrees'")
-                );
+                var json = await _storage.GetObjectAsync(GetBucket(region), "predefined/degrees.json");
+                if (json == null) return new List<string>();
 
-                var degrees = new List<string>();
-
-                while (query.HasMoreResults)
-                {
-                    var response = await query.ReadNextAsync();
-                    foreach (var item in response)
-                    {
-                        // Hvis Degrees findes og er et objekt
-                        if (item.Degrees != null)
-                        {
-                            // Hvis Degrees er et array eller en liste
-                            foreach (var degree in item.Degrees)
-                            {
-                                if (degree.DegreeName != null)
-                                {
-                                    degrees.Add(degree.DegreeName.ToString());
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return degrees;
+                var doc = JsonConvert.DeserializeObject<DegreesDocument>(json);
+                return doc?.Degrees?.Select(d => d.DegreeName).Where(n => n != null).ToList()
+                       ?? new List<string>();
             }
             catch (Exception ex)
             {
@@ -62,39 +33,16 @@ namespace CVAPI.Repos
             }
         }
 
-        // Hent Fields
         public async Task<List<string>> GetFieldsAsync(string region)
         {
             try
             {
-                var container = GetContainer(region);
-                var query = container.GetItemQueryIterator<dynamic>(
-                    new QueryDefinition("SELECT c.Fields FROM c WHERE c.id = 'predefinedFields'")
-                );
+                var json = await _storage.GetObjectAsync(GetBucket(region), "predefined/fields.json");
+                if (json == null) return new List<string>();
 
-                var fields = new List<string>();
-
-                while (query.HasMoreResults)
-                {
-                    var response = await query.ReadNextAsync();
-                    foreach (var item in response)
-                    {
-                        // Hvis Fields findes og er et objekt
-                        if (item.Fields != null)
-                        {
-                            // Hvis Fields er et array eller en liste
-                            foreach (var field in item.Fields)
-                            {
-                                if (field.FieldName != null)
-                                {
-                                    fields.Add(field.FieldName.ToString());
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return fields;
+                var doc = JsonConvert.DeserializeObject<FieldsDocument>(json);
+                return doc?.Fields?.Select(f => f.FieldName).Where(n => n != null).ToList()
+                       ?? new List<string>();
             }
             catch (Exception ex)
             {
@@ -103,45 +51,42 @@ namespace CVAPI.Repos
             }
         }
 
-        // Hent Engineering Fields
         public async Task<List<string>> GetEngineeringFieldsAsync(string region)
         {
             try
             {
-                var container = GetContainer(region);
-                var query = container.GetItemQueryIterator<dynamic>(
-                    new QueryDefinition("SELECT c.Fields FROM c WHERE c.id = 'predefinedEngineeringFields'")
-                );
+                var json = await _storage.GetObjectAsync(GetBucket(region), "predefined/engineeringFields.json");
+                if (json == null) return new List<string>();
 
-                var engineeringFields = new List<string>();
-
-                while (query.HasMoreResults)
-                {
-                    var response = await query.ReadNextAsync();
-                    foreach (var item in response)
-                    {
-                        // Hvis Fields findes og er et objekt
-                        if (item.Fields != null)
-                        {
-                            // Hvis Fields er et array eller en liste
-                            foreach (var field in item.Fields)
-                            {
-                                if (field.FieldName != null)
-                                {
-                                    engineeringFields.Add(field.FieldName.ToString());
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return engineeringFields;
+                var doc = JsonConvert.DeserializeObject<FieldsDocument>(json);
+                return doc?.Fields?.Select(f => f.FieldName).Where(n => n != null).ToList()
+                       ?? new List<string>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in GetEngineeringFieldsAsync: {ex.Message}");
                 return new List<string>();
             }
+        }
+
+        private class DegreesDocument
+        {
+            public List<DegreeEntry> Degrees { get; set; } = new();
+        }
+
+        private class DegreeEntry
+        {
+            public string DegreeName { get; set; } = "";
+        }
+
+        private class FieldsDocument
+        {
+            public List<FieldEntry> Fields { get; set; } = new();
+        }
+
+        private class FieldEntry
+        {
+            public string FieldName { get; set; } = "";
         }
     }
 }

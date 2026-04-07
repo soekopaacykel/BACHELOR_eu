@@ -4,9 +4,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using CVAPI.Models; // Din egen User model
+using CVAPI.Models;
 using CVAPI.Services;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using User = CVAPI.Models.User;
@@ -15,32 +14,30 @@ namespace CVAPI.Repos
 {
     public class UserRepository
     {
-        private readonly CosmosClient _cosmosClient;
-        private readonly string _databaseName = "DK";
-        private readonly IConfiguration _configuration; // Add IConfiguration
-        private readonly ILogger<UserRepository> _logger; // Add ILogger
+        private readonly CellarStorageService _storage;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<UserRepository> _logger;
 
         public UserRepository(
-            CosmosClient cosmosClient,
+            CellarStorageService storage,
             IConfiguration configuration,
             ILogger<UserRepository> logger
         )
         {
-            _cosmosClient = cosmosClient;
-            _configuration = configuration; // Assign IConfiguration
-            _logger = logger; // Assign ILogger
+            _storage = storage;
+            _configuration = configuration;
+            _logger = logger;
         }
 
-        private Container GetContainer(string region = "DK") // Default region set to "DK"
-        {
-            var database = _cosmosClient.GetDatabase(_databaseName);
-            return database.GetContainer(region); // Region "DK" or "VN"
-        }
+        private static string GetBucket(string region) =>
+            region.ToUpper() == "VN" ? "bachelor-vn" : "bachelor-dk";
+
+        private static string UserKey(string userId) => $"users/{userId}.json";
 
         public async Task AddUserAsync(CVAPI.Models.User user, string region = "DK")
         {
-            var container = GetContainer(region);
-            await container.CreateItemAsync(user);
+            var json = JsonConvert.SerializeObject(user);
+            await _storage.PutObjectAsync(GetBucket(region), UserKey(user.UserId), json);
         }
 
         public async Task AddConsultantAsync(
@@ -49,16 +46,14 @@ namespace CVAPI.Repos
         )
         {
             if (string.IsNullOrEmpty(consultant.Id))
-            {
                 consultant.Id = Guid.NewGuid().ToString();
-            }
-            if (consultant.DateAdded == default) // Hvis DateAdded ikke er sat, sæt den nu
-            {
+            if (consultant.DateAdded == default)
                 consultant.DateAdded = DateTime.UtcNow;
-            }
+            if (string.IsNullOrEmpty(consultant.UserId))
+                consultant.UserId = consultant.Id;
 
-            var container = GetContainer(region);
-            await container.CreateItemAsync(consultant);
+            var json = JsonConvert.SerializeObject(consultant);
+            await _storage.PutObjectAsync(GetBucket(region), UserKey(consultant.UserId), json);
         }
 
         public async Task AddApplicantAsync(Applicant applicant, string region = "DK")
@@ -95,14 +90,10 @@ namespace CVAPI.Repos
                     $"[DEBUG] Competencies: {JsonConvert.SerializeObject(applicant.Competencies, Formatting.Indented)}"
                 );
 
-                // Get container from Cosmos DB
-                var container = GetContainer(region);
+                var json = JsonConvert.SerializeObject(applicant);
+                await _storage.PutObjectAsync(GetBucket(region), UserKey(applicant.UserId), json);
 
-                // Save the applicant to Cosmos DB
-                await container.CreateItemAsync(applicant);
-
-                // Log success
-                Console.WriteLine("[DEBUG] Applicant successfully saved in CosmosDB.");
+                Console.WriteLine("[DEBUG] Applicant successfully saved in Cellar.");
             }
             catch (Exception ex)
             {
@@ -114,23 +105,9 @@ namespace CVAPI.Repos
 
         public async Task<CVAPI.Models.User?> GetUserAsync(string UserId, string region = "DK")
         {
-            var query = GetContainer(region)
-                .GetItemQueryIterator<CVAPI.Models.User>(
-                    new QueryDefinition("SELECT * FROM c WHERE c.UserId = @UserId").WithParameter(
-                        "@UserId",
-                        UserId
-                    )
-                );
-
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-                foreach (var user in response)
-                {
-                    return user;
-                }
-            }
-            return null;
+            var json = await _storage.GetObjectAsync(GetBucket(region), UserKey(UserId));
+            if (json == null) return null;
+            return JsonConvert.DeserializeObject<CVAPI.Models.User>(json);
         }
 
         public async Task AddManagerAsync(Manager manager, string region = "DK")
@@ -155,14 +132,10 @@ namespace CVAPI.Repos
                     Console.WriteLine($"[DEBUG] Generated new UserId: {manager.UserId}");
                 }
 
-                // Get container from Cosmos DB
-                var container = GetContainer(region);
+                var json = JsonConvert.SerializeObject(manager);
+                await _storage.PutObjectAsync(GetBucket(region), UserKey(manager.UserId), json);
 
-                // Save the manager to Cosmos DB
-                await container.CreateItemAsync(manager);
-
-                // Log success
-                Console.WriteLine("[DEBUG] Manager successfully saved in CosmosDB.");
+                Console.WriteLine("[DEBUG] Manager successfully saved in Cellar.");
             }
             catch (Exception ex)
             {
@@ -177,26 +150,9 @@ namespace CVAPI.Repos
             string region = "DK"
         )
         {
-            var query = GetContainer(region)
-                .GetItemQueryIterator<CVAPI.Models.Consultant>(
-                    new QueryDefinition("SELECT * FROM c WHERE c.UserId = @UserId").WithParameter(
-                        "@UserId",
-                        UserId
-                    )
-                );
-
-            // Gennemgår alle resultaterne fra forespørgslen
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-                foreach (var consultant in response)
-                {
-                    return consultant; // Returner den første Consultant, der matcher UserId
-                }
-            }
-
-            // Hvis ingen Consultant er fundet, returner null
-            return null;
+            var json = await _storage.GetObjectAsync(GetBucket(region), UserKey(UserId));
+            if (json == null) return null;
+            return JsonConvert.DeserializeObject<CVAPI.Models.Consultant>(json);
         }
 
         public async Task<CVAPI.Models.Applicant?> GetApplicantAsync(
@@ -204,123 +160,48 @@ namespace CVAPI.Repos
             string region = "DK"
         )
         {
-            var query = GetContainer(region)
-                .GetItemQueryIterator<CVAPI.Models.Applicant>(
-                    new QueryDefinition("SELECT * FROM c WHERE c.UserId = @UserId").WithParameter(
-                        "@UserId",
-                        UserId
-                    )
-                );
-
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-                foreach (var applicant in response)
-                {
-                    return applicant;
-                }
-            }
-
-            return null;
+            var json = await _storage.GetObjectAsync(GetBucket(region), UserKey(UserId));
+            if (json == null) return null;
+            return JsonConvert.DeserializeObject<CVAPI.Models.Applicant>(json);
         }
 
         public async Task<List<CVAPI.Models.Consultant>> GetAllConsultants(string region = "DK")
         {
-            var container = GetContainer(region);
-            var query = container.GetItemQueryIterator<CVAPI.Models.Consultant>(
-                new QueryDefinition("SELECT * FROM c WHERE c.UserRole = 1")
-            );
-
-            var consultants = new List<CVAPI.Models.Consultant>();
-
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-                foreach (var consultant in response)
-                {
-                    Console.WriteLine(
-                        $"Consultant: {consultant.FirstName} {consultant.LastName} - Competencies Count: {consultant.Competencies?.Count ?? 0}"
-                    );
-                    consultants.Add(consultant);
-                }
-            }
-
-            Console.WriteLine($"Total Consultants Loaded: {consultants.Count}");
-            return consultants;
+            return await GetAllUsersOfType<CVAPI.Models.Consultant>(region, Role.Consultant);
         }
 
         public async Task<List<CVAPI.Models.Applicant>> GetAllApplicants(string region = "DK")
         {
-            var container = GetContainer(region);
-            var query = container.GetItemQueryIterator<CVAPI.Models.Applicant>(
-                new QueryDefinition("SELECT * FROM c WHERE c.UserRole = 0")
-            );
-
-            var applicants = new List<CVAPI.Models.Applicant>();
-
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-                applicants.AddRange(response);
-            }
-
-            return applicants;
+            return await GetAllUsersOfType<CVAPI.Models.Applicant>(region, Role.Applicant);
         }
 
-        public async Task<User> GetUserByEmailAsync(string email, string region)
+        public async Task<User?> GetUserByEmailAsync(string email, string region)
         {
-            var container = GetContainer(region);
-
-            // Query to find the user by email
-            var query = container.GetItemQueryIterator<dynamic>(
-                new QueryDefinition("SELECT * FROM c WHERE c.Email = @Email").WithParameter(
-                    "@Email",
-                    email
-                )
-            );
-
-            while (query.HasMoreResults)
+            var keys = await _storage.ListObjectKeysAsync(GetBucket(region), "users/");
+            foreach (var key in keys)
             {
-                var response = await query.ReadNextAsync();
-                foreach (var record in response)
+                var json = await _storage.GetObjectAsync(GetBucket(region), key);
+                if (json == null) continue;
+
+                _logger.LogInformation($"[DEBUG] Raw database record: {json}");
+
+                var user = JsonConvert.DeserializeObject<User>(json);
+                if (user == null || !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                switch (user.UserRole)
                 {
-                    // Log the raw database record for debugging
-                    _logger.LogInformation(
-                        $"[DEBUG] Raw database record: {JsonConvert.SerializeObject(record)}"
-                    );
-
-                    // Deserialize the record into the User object
-                    var user = JsonConvert.DeserializeObject<User>(
-                        JsonConvert.SerializeObject(record)
-                    );
-
-                    // Check the UserRole and cast to the appropriate subclass
-                    switch (user.UserRole)
-                    {
-                        case Role.Manager:
-                            var manager = JsonConvert.DeserializeObject<Manager>(
-                                JsonConvert.SerializeObject(record)
-                            );
-                            _logger.LogInformation(
-                                $"[DEBUG] Manager AdminInitials: {manager.AdminInitials}"
-                            );
-                            return manager;
-
-                        case Role.Admin:
-                            var admin = JsonConvert.DeserializeObject<Admin>(
-                                JsonConvert.SerializeObject(record)
-                            );
-                            _logger.LogInformation(
-                                $"[DEBUG] Admin AdminInitials: {admin.AdminInitials}"
-                            );
-                            return admin;
-
-                        default:
-                            _logger.LogInformation(
-                                $"[DEBUG] User is not a Manager or Admin. Role: {user.UserRole}"
-                            );
-                            return user;
-                    }
+                    case Role.Manager:
+                        var manager = JsonConvert.DeserializeObject<Manager>(json);
+                        _logger.LogInformation($"[DEBUG] Manager AdminInitials: {manager?.AdminInitials}");
+                        return manager;
+                    case Role.Admin:
+                        var admin = JsonConvert.DeserializeObject<Admin>(json);
+                        _logger.LogInformation($"[DEBUG] Admin AdminInitials: {admin?.AdminInitials}");
+                        return admin;
+                    default:
+                        _logger.LogInformation($"[DEBUG] User is not a Manager or Admin. Role: {user.UserRole}");
+                        return user;
                 }
             }
 
@@ -330,89 +211,57 @@ namespace CVAPI.Repos
 
         public async Task UpdateUserPasswordsToHashedAsync(string region = "DK")
         {
-            var container = GetContainer(region);
-            var query = container.GetItemQueryIterator<User>(
-                new QueryDefinition("SELECT * FROM c")
-            );
+            var bucket = GetBucket(region);
+            var keys = await _storage.ListObjectKeysAsync(bucket, "users/");
+            var updated = 0;
 
-            var users = new List<User>();
-
-            while (query.HasMoreResults)
+            foreach (var key in keys)
             {
-                var response = await query.ReadNextAsync();
-                users.AddRange(response);
-            }
+                var json = await _storage.GetObjectAsync(bucket, key);
+                if (json == null) continue;
 
-            foreach (var user in users)
-            {
-                // Tjek om passwordet ikke allerede er hashet
+                var user = JsonConvert.DeserializeObject<User>(json)!;
                 if (!string.IsNullOrEmpty(user.Password) && !user.Password.StartsWith("$2a$"))
                 {
-                    // Hasher passwordet
                     user.Password = PasswordHelper.HashPassword(user.Password);
-
-                    // Opdater relaterede objekter som Consultant eller Applicant
-                    var consultant = await GetConsultantAsync(user.UserId, region);
-                    if (consultant != null)
-                    {
-                        consultant.Password = user.Password;
-                        await container.UpsertItemAsync(consultant); // Opdater Consultant
-                    }
-
-                    var applicant = await GetApplicantAsync(user.UserId, region);
-                    if (applicant != null)
-                    {
-                        applicant.Password = user.Password;
-                        await container.UpsertItemAsync(applicant); // Opdater Applicant
-                    }
-
-                    // Opdater brugeren i databasen
-                    await container.UpsertItemAsync(user);
+                    await _storage.PutObjectAsync(bucket, key, JsonConvert.SerializeObject(user));
+                    updated++;
                 }
             }
 
-            Console.WriteLine($"Updated {users.Count} user passwords.");
+            Console.WriteLine($"Updated {updated} user passwords in region {region}.");
         }
 
         public async Task<List<Manager>> GetAllManagersAsync(string region = "DK")
         {
-            var container = GetContainer(region);
-            var query = container.GetItemQueryIterator<Manager>(
-                new QueryDefinition(
-                    "SELECT * FROM c WHERE c.UserRole = @managerRole"
-                ).WithParameter("@managerRole", (int)Role.Manager)
-            );
-
-            var managers = new List<Manager>();
-
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-                managers.AddRange(response);
-            }
-
-            return managers;
+            return await GetAllUsersOfType<Manager>(region, Role.Manager);
         }
 
         public async Task<List<Admin>> GetAllAdminsAsync(string region = "DK")
         {
-            var container = GetContainer(region);
-            var query = container.GetItemQueryIterator<Admin>(
-                new QueryDefinition("SELECT * FROM c WHERE c.UserRole = @adminRole").WithParameter(
-                    "@adminRole",
-                    (int)Role.Admin
-                )
-            );
+            return await GetAllUsersOfType<Admin>(region, Role.Admin);
+        }
 
-            var admins = new List<Admin>();
+        private async Task<List<T>> GetAllUsersOfType<T>(string region, Role role) where T : User
+        {
+            var bucket = GetBucket(region);
+            var keys = await _storage.ListObjectKeysAsync(bucket, "users/");
+            var result = new List<T>();
 
-            while (query.HasMoreResults)
+            foreach (var key in keys)
             {
-                var response = await query.ReadNextAsync();
-                admins.AddRange(response);
+                var json = await _storage.GetObjectAsync(bucket, key);
+                if (json == null) continue;
+
+                var user = JsonConvert.DeserializeObject<User>(json);
+                if (user?.UserRole != role) continue;
+
+                var typed = JsonConvert.DeserializeObject<T>(json);
+                if (typed != null)
+                    result.Add(typed);
             }
 
-            return admins;
+            return result;
         }
 
         public async Task UpdateUserPasswordAsync(
@@ -421,31 +270,12 @@ namespace CVAPI.Repos
             string region = "DK"
         )
         {
-            var container = GetContainer(region);
+            var json = await _storage.GetObjectAsync(GetBucket(region), UserKey(userId));
+            if (json == null) throw new ArgumentException("User not found");
 
-            // Query to find the user
-            var query = container.GetItemQueryIterator<User>(
-                new QueryDefinition("SELECT * FROM c WHERE c.UserId = @userId").WithParameter(
-                    "@userId",
-                    userId
-                )
-            );
-
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-                foreach (var user in response)
-                {
-                    // Update the password
-                    user.Password = hashedPassword;
-
-                    // Upsert the updated user
-                    await container.UpsertItemAsync(user);
-                    return;
-                }
-            }
-
-            throw new ArgumentException("User not found");
+            var user = JsonConvert.DeserializeObject<User>(json)!;
+            user.Password = hashedPassword;
+            await _storage.PutObjectAsync(GetBucket(region), UserKey(userId), JsonConvert.SerializeObject(user));
         }
 
         public async Task DeleteUserAsync(string userId, string region = "DK")
@@ -453,36 +283,20 @@ namespace CVAPI.Repos
             _logger.LogInformation($"[DEBUG] DeleteUserAsync called with userId={userId}, region={region}");
             try
             {
-                var container = GetContainer(region);
-                // Find the user first
-                var query = container.GetItemQueryIterator<User>(
-                    new QueryDefinition("SELECT * FROM c WHERE c.UserId = @userId")
-                        .WithParameter("@userId", userId)
-                );
-                while (query.HasMoreResults)
+                var key = UserKey(userId);
+                var json = await _storage.GetObjectAsync(GetBucket(region), key);
+                if (json == null)
                 {
-                    var response = await query.ReadNextAsync();
-                    foreach (var user in response)
-                    {
-                        _logger.LogInformation($"[DEBUG] Attempting to delete user: id={user.Id}, userId={user.UserId}");
-                        Console.WriteLine($"[DEBUG] Attempting to delete user: id={user.Id}, userId={user.UserId}");
-                        await container.DeleteItemAsync<User>(
-                            user.Id,
-                            new PartitionKey(user.UserId)
-                        );
-                        _logger.LogInformation($"[DEBUG] Deleted user: id={user.Id}, userId={user.UserId}");
-                        Console.WriteLine($"[DEBUG] Deleted user: id={user.Id}, userId={user.UserId}");
-                        return;
-                    }
+                    _logger.LogWarning($"[DEBUG] User not found for deletion: {userId}");
+                    throw new ArgumentException("User not found");
                 }
-                _logger.LogWarning($"[DEBUG] User not found for deletion: {userId}");
-                Console.WriteLine($"[DEBUG] User not found for deletion: {userId}");
-                throw new ArgumentException("User not found");
+
+                await _storage.DeleteObjectAsync(GetBucket(region), key);
+                _logger.LogInformation($"[DEBUG] Deleted user: userId={userId}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"[ERROR] Exception in DeleteUserAsync for userId={userId}");
-                Console.WriteLine($"[ERROR] Exception in DeleteUserAsync: {ex}");
                 throw;
             }
         }
@@ -492,36 +306,23 @@ namespace CVAPI.Repos
             _logger.LogInformation($"[DEBUG] DeleteApplicantAsync called with userId={userId}, region={region}");
             try
             {
-                var container = GetContainer(region);
-                var query = $"SELECT * FROM c WHERE c.UserId = @userId AND c.UserRole = {(int)Role.Applicant}";
-                var queryDef = new QueryDefinition(query)
-                    .WithParameter("@userId", userId);
-                var results = container.GetItemQueryIterator<Applicant>(queryDef);
-                while (results.HasMoreResults)
+                var json = await _storage.GetObjectAsync(GetBucket(region), UserKey(userId));
+                if (json == null)
                 {
-                    var response = await results.ReadNextAsync();
-                    var applicant = response.FirstOrDefault();
-                    if (applicant != null)
-                    {
-                        _logger.LogInformation($"[DEBUG] Attempting to delete applicant: id={applicant.Id}, userId={applicant.UserId}");
-                        Console.WriteLine($"[DEBUG] Attempting to delete applicant: id={applicant.Id}, userId={applicant.UserId}");
-                        await container.DeleteItemAsync<Applicant>(
-                            applicant.Id,
-                            new PartitionKey(applicant.UserId)
-                        );
-                        _logger.LogInformation($"[DEBUG] Deleted applicant: id={applicant.Id}, userId={applicant.UserId}");
-                        Console.WriteLine($"[DEBUG] Deleted applicant: id={applicant.Id}, userId={applicant.UserId}");
-                        return;
-                    }
+                    _logger.LogWarning($"[DEBUG] Applicant not found for deletion: {userId}");
+                    throw new ArgumentException("Applicant not found");
                 }
-                _logger.LogWarning($"[DEBUG] Applicant not found for deletion: {userId}");
-                Console.WriteLine($"[DEBUG] Applicant not found for deletion: {userId}");
-                throw new ArgumentException("Applicant not found");
+
+                var applicant = JsonConvert.DeserializeObject<Applicant>(json)!;
+                if (applicant.UserRole != Role.Applicant)
+                    throw new ArgumentException("Applicant not found");
+
+                await _storage.DeleteObjectAsync(GetBucket(region), UserKey(userId));
+                _logger.LogInformation($"[DEBUG] Deleted applicant: userId={userId}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"[ERROR] Exception in DeleteApplicantAsync for userId={userId}");
-                Console.WriteLine($"[ERROR] Exception in DeleteApplicantAsync: {ex}");
                 throw;
             }
         }
@@ -535,96 +336,57 @@ namespace CVAPI.Repos
             Console.WriteLine("[DEBUG] UpdateManagerPasswordAsync called.");
             Console.WriteLine($"[DEBUG] UserId: {userId}, Region: {region}");
 
-            var container = GetContainer(region);
-
-            // Query to find the manager
-            var query = container.GetItemQueryIterator<Manager>(
-                new QueryDefinition("SELECT * FROM c WHERE c.UserId = @userId").WithParameter(
-                    "@userId",
-                    userId
-                )
-            );
-
-            while (query.HasMoreResults)
+            var json = await _storage.GetObjectAsync(GetBucket(region), UserKey(userId));
+            if (json == null)
             {
-                var response = await query.ReadNextAsync();
-                foreach (var manager in response)
-                {
-                    Console.WriteLine(
-                        $"[DEBUG] Manager found: {manager.FirstName} {manager.LastName}"
-                    );
-
-                    // Update the password
-                    manager.Password = PasswordHelper.HashPassword(newPassword);
-                    Console.WriteLine("[DEBUG] Password hashed successfully.");
-
-                    // Upsert the updated manager
-                    await container.UpsertItemAsync(manager);
-                    Console.WriteLine("[DEBUG] Manager password updated in the database.");
-                    return;
-                }
+                Console.WriteLine("[ERROR] Manager not found.");
+                throw new ArgumentException("Manager not found");
             }
 
-            Console.WriteLine("[ERROR] Manager not found.");
-            throw new ArgumentException("Manager not found");
+            var manager = JsonConvert.DeserializeObject<Manager>(json)!;
+            Console.WriteLine($"[DEBUG] Manager found: {manager.FirstName} {manager.LastName}");
+
+            manager.Password = PasswordHelper.HashPassword(newPassword);
+            Console.WriteLine("[DEBUG] Password hashed successfully.");
+
+            await _storage.PutObjectAsync(GetBucket(region), UserKey(userId), JsonConvert.SerializeObject(manager));
+            Console.WriteLine("[DEBUG] Manager password updated in Cellar.");
         }
 
         public async Task UpdateConsultantAsync(Consultant consultant, string region = "DK")
         {
-            var container = GetContainer(region);
-            await container.UpsertItemAsync(consultant, new PartitionKey(consultant.UserId));
+            var json = JsonConvert.SerializeObject(consultant);
+            await _storage.PutObjectAsync(GetBucket(region), UserKey(consultant.UserId), json);
         }
 
         public async Task UpdateApplicantAsync(Applicant applicant, string region = "DK")
         {
-            var container = GetContainer(region);
-            await container.UpsertItemAsync(applicant, new PartitionKey(applicant.UserId));
+            var json = JsonConvert.SerializeObject(applicant);
+            await _storage.PutObjectAsync(GetBucket(region), UserKey(applicant.UserId), json);
         }
 
         public async Task SavePrivateNoteAsync(
             string userId,
             string noteText,
             string adminInitials,
-            string region = "DK" // Default region to "DK"
+            string region = "DK"
         )
         {
-            var container = GetContainer(region);
-
-            // Try to retrieve the applicant
             var applicant = await GetApplicantAsync(userId, region);
             if (applicant != null)
             {
-                if (applicant.PrivateNotes == null)
-                {
-                    applicant.PrivateNotes = new List<PrivateNote>();
-                }
-
-                applicant.PrivateNotes.Add(
-                    new PrivateNote { Text = noteText, AdminInitials = adminInitials }
-                );
-
-                // Ensure the correct Id and PartitionKey are set for Cosmos DB
-                applicant.Id = applicant.Id ?? Guid.NewGuid().ToString();
-                await container.UpsertItemAsync(applicant, new PartitionKey(applicant.UserId));
+                applicant.PrivateNotes ??= new List<PrivateNote>();
+                applicant.PrivateNotes.Add(new PrivateNote { Text = noteText, AdminInitials = adminInitials });
+                await _storage.PutObjectAsync(GetBucket(region), UserKey(userId), JsonConvert.SerializeObject(applicant));
                 return;
             }
 
-            // Try to retrieve the consultant
             var consultant = await GetConsultantAsync(userId, region);
             if (consultant != null)
             {
-                if (consultant.PrivateNotes == null)
-                {
-                    consultant.PrivateNotes = new List<PrivateNote>();
-                }
-
-                consultant.PrivateNotes.Add(
-                    new PrivateNote { Text = noteText, AdminInitials = adminInitials }
-                );
-
-                // Ensure the correct Id and PartitionKey are set for Cosmos DB
-                consultant.Id = consultant.Id ?? Guid.NewGuid().ToString();
-                await container.UpsertItemAsync(consultant, new PartitionKey(consultant.UserId));
+                consultant.PrivateNotes ??= new List<PrivateNote>();
+                consultant.PrivateNotes.Add(new PrivateNote { Text = noteText, AdminInitials = adminInitials });
+                await _storage.PutObjectAsync(GetBucket(region), UserKey(userId), JsonConvert.SerializeObject(consultant));
                 return;
             }
 
@@ -681,20 +443,12 @@ namespace CVAPI.Repos
 
         public async Task UpdateUserRoleAsync(string userId, int newRole, string region = "DK")
         {
-            var container = GetContainer(region);
-            var user = await GetUserAsync(userId, region);
-            if (user != null)
-            {
-                // Update the user's role
-                user.UserRole = (Role)newRole;
+            var json = await _storage.GetObjectAsync(GetBucket(region), UserKey(userId));
+            if (json == null) throw new ArgumentException($"User with ID {userId} not found.");
 
-                // Save the updated user back to the database
-                await container.UpsertItemAsync(user);
-            }
-            else
-            {
-                throw new ArgumentException($"User with ID {userId} not found.");
-            }
+            var user = JsonConvert.DeserializeObject<User>(json)!;
+            user.UserRole = (Role)newRole;
+            await _storage.PutObjectAsync(GetBucket(region), UserKey(userId), JsonConvert.SerializeObject(user));
         }
 
         public async Task<List<PrivateNote>> GetPrivateNotesAsync(
@@ -719,21 +473,12 @@ namespace CVAPI.Repos
 
         public async Task UpdateApplicantUserRoleAsync(string userId, Role newRole, string region = "DK")
         {
-
-            var container = GetContainer(region);
-
-            // Retrieve the applicant
             var applicant = await GetApplicantAsync(userId, region);
             if (applicant == null)
-            {
                 throw new ArgumentException($"Applicant with ID {userId} not found.");
-            }
 
-            // Update the user role
             applicant.UserRole = newRole;
-
-            // Save the updated applicant
-            await container.UpsertItemAsync(applicant, new PartitionKey(applicant.UserId));
+            await _storage.PutObjectAsync(GetBucket(region), UserKey(userId), JsonConvert.SerializeObject(applicant));
         }
     }
 }
