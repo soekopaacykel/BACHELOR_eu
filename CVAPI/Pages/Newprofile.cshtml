@@ -471,6 +471,14 @@
                 </div>
 
                 <!-- Gem Profil knap -->
+                <div class="form-group">
+                    <label for="newProfilePicture">Profile Picture (JPG/PNG, max 5 MB):</label>
+                    <input type="file" class="form-control" id="newProfilePicture" accept="image/jpeg,image/png,image/gif,image/webp" />
+                </div>
+                <div class="form-group">
+                    <label for="newCvFile">CV (PDF, max 10 MB):</label>
+                    <input type="file" class="form-control" id="newCvFile" accept="application/pdf" />
+                </div>
                 <button type="button" id="saveProfileBtn" onclick="submitApplication()">Save Profile</button>
             </div>
 
@@ -1767,6 +1775,35 @@
             
             console.log('Using region for submission:', region);
             let profilePictureUrl = null;
+            let cvFilePath = '';
+
+            // Upload profile picture if provided
+            const profilePictureInput = document.getElementById('newProfilePicture');
+            if (profilePictureInput && profilePictureInput.files.length > 0) {
+                const fd = new FormData();
+                fd.append('file', profilePictureInput.files[0]);
+                const uploadResp = await fetch(`/api/user/${region}/upload-profile-picture`, {
+                    method: 'POST',
+                    body: fd
+                });
+                if (!uploadResp.ok) throw new Error('Failed to upload profile picture');
+                const uploadData = await uploadResp.json();
+                profilePictureUrl = uploadData.fileUrl;
+            }
+
+            // Upload CV if provided
+            const cvFileInput = document.getElementById('newCvFile');
+            if (cvFileInput && cvFileInput.files.length > 0) {
+                const fd = new FormData();
+                fd.append('file', cvFileInput.files[0]);
+                const uploadResp = await fetch(`/api/user/${region}/upload-cv`, {
+                    method: 'POST',
+                    body: fd
+                });
+                if (!uploadResp.ok) throw new Error('CV upload failed');
+                const uploadData = await uploadResp.json();
+                cvFilePath = uploadData.fileUrl;
+            }
 
             // Make sure the competencies are updated before submission
             updateCompetencies();
@@ -1967,7 +2004,7 @@
                 Country: document.getElementById("country")?.value || "",
                 Interests: document.getElementById("interests")?.value || "",
                 Linkedin: document.getElementById("linkedinProfile")?.value || "",
-                CV: "",
+                CV: cvFilePath,
                 Summary: document.getElementById("summary")?.value || "",
                 ProfilePicture: profilePictureUrl,
                 Competencies: competenciesObject,

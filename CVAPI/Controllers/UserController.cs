@@ -15,15 +15,18 @@ namespace CVAPI.Controllers
         private readonly UserRepository _userRepository;
         private readonly ILogger<UserController> _logger; // Tilføj loggeren
         private readonly JwtTokenService _jwtTokenService; // Tilføj JwtTokenService
+        private readonly HetznerWebDavService _webDav;
 
         public UserController(
             UserRepository userRepository,
             JwtTokenService jwtTokenService,
+            HetznerWebDavService webDav,
             ILogger<UserController> logger
         )
         {
             _userRepository = userRepository;
             _jwtTokenService = jwtTokenService;
+            _webDav = webDav;
             _logger = logger;
         }
 
@@ -1355,6 +1358,92 @@ namespace CVAPI.Controllers
         {
             public string UserId { get; set; }
             public string Interests { get; set; }
+        }
+
+        // ── File upload endpoints (Hetzner Nextcloud / WebDAV) ───────────────────
+
+        [HttpPost("{region}/upload-cv")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        public async Task<IActionResult> UploadCv(string region, IFormFile file)
+        {
+            try
+            {
+                if (file is null || file.Length == 0)
+                    return BadRequest(new { error = "No file provided." });
+
+                var fileUrl = await _webDav.UploadCvAsync(file);
+                return Ok(new { fileUrl });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "CV upload failed");
+                return StatusCode(500, new { error = "An error occurred during CV upload." });
+            }
+        }
+
+        [HttpPost("{region}/upload-profile-picture")]
+        [RequestSizeLimit(5 * 1024 * 1024)]
+        public async Task<IActionResult> UploadProfilePicture(string region, IFormFile file)
+        {
+            try
+            {
+                if (file is null || file.Length == 0)
+                    return BadRequest(new { error = "No file provided." });
+
+                var fileUrl = await _webDav.UploadProfilePictureAsync(file);
+                return Ok(new { fileUrl });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Profile picture upload failed");
+                return StatusCode(500, new { error = "An error occurred during profile picture upload." });
+            }
+        }
+
+        /// <summary>
+        /// Proxies a privately stored file from Nextcloud to the browser.
+        /// Requires an active session — files are never publicly accessible.
+        /// </summary>
+        [HttpGet("{region}/file/{*filePath}")]
+        public async Task<IActionResult> GetFile(string region, string filePath)
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserId")))
+                return Unauthorized();
+
+            // Prevent path traversal
+            if (filePath.Contains(".."))
+                return BadRequest();
+
+            try
+            {
+                var (data, contentType) = await _webDav.GetFileAsync(filePath);
+
+                var disposition = contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+                    ? "inline"
+                    : "attachment";
+                Response.Headers["Content-Disposition"] =
+                    $"{disposition}; filename=\"{Path.GetFileName(filePath)}\"";
+
+                return File(data, contentType);
+            }
+            catch (HttpRequestException ex) when (
+                ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "File proxy failed for path: {FilePath}", filePath);
+                return StatusCode(500);
+            }
         }
     }
 }

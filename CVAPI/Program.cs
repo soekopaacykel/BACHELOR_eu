@@ -18,6 +18,9 @@ builder.Services.AddHttpClient();
 // Registrer Cellar (S3-kompatibel object storage via Clever Cloud)
 builder.Services.AddHttpClient<CellarStorageService>();
 
+// Registrer Hetzner Storage Share (Nextcloud) via WebDAV
+builder.Services.AddHttpClient<HetznerWebDavService>();
+
 // Registrer repositorier og services
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<ExperienceRepository>();

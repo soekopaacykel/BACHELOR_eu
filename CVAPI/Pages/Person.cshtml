@@ -161,7 +161,7 @@
 
         <div class="consultant-header-bar">
             <div class="profile-section" style="display: flex; flex-direction: column; align-items: center; margin-right: 20px; margin-top: 50px; position: relative;">
-                <img src="@(string.IsNullOrEmpty(Model.Consultant.ProfilePicture) ? "/Images/ProfilePic.jpg" : Model.Consultant.ProfilePicture)" 
+                <img src="@(string.IsNullOrEmpty(Model.Consultant.ProfilePicture) ? "/Images/ProfilePic.jpg" : $"/api/user/{Model.Region}/file/{Model.Consultant.ProfilePicture}")" 
                      alt="Profile Picture" 
                      class="profile-picture"
                      onerror="this.src='/Images/ProfilePic.jpg'; console.log('Profile picture failed to load, using default');"
@@ -392,6 +392,10 @@
                                 @Model.Consultant.Address, @Model.Consultant.PostalCode @Model.Consultant.City, @Model.Consultant.Country
                             </li>
                             <li><img src="~/Images/linkedin-icon.png" class="contact-icon"> <a href="@Model.Consultant.Linkedin" target="_blank">@Model.Consultant.Linkedin</a></li>
+                            @if (!string.IsNullOrEmpty(Model.Consultant.CV))
+                            {
+                                <li>&#128196; <a href="/api/user/@Model.Region/file/@Model.Consultant.CV" target="_blank">Download CV</a></li>
+                            }
                         </ul>
                     </div>
     
@@ -427,6 +431,11 @@
                             <div class="form-group">
                                 <label for="Linkedin">LinkedIn:</label>
                                 <input type="url" class="form-control" id="Linkedin" name="Linkedin" value="@Model.Consultant.Linkedin" />
+                            </div>
+                            <div class="form-group">
+                                <label for="CvFile">Upload CV (PDF, max 10 MB):</label>
+                                <input type="file" class="form-control" id="CvFile" name="CvFile" accept="application/pdf" />
+                                <small class="form-text text-muted">Leave empty to keep the current CV.</small>
                             </div>
                             <div class="form-buttons">
                                 <button type="submit" class="btn btn-edit-save">Save</button>
@@ -1049,7 +1058,27 @@
         event.preventDefault();
         
         let profilePictureUrl = null;
-        
+
+        // Upload profile picture if a new file was selected
+        const profilePictureInput = document.getElementById('ProfilePicture');
+        if (profilePictureInput && profilePictureInput.files.length > 0) {
+            try {
+                const fd = new FormData();
+                fd.append('file', profilePictureInput.files[0]);
+                const uploadResp = await fetch(`/api/user/${REGION}/upload-profile-picture`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${getJwtTokenFromCookie()}` },
+                    body: fd
+                });
+                if (!uploadResp.ok) throw new Error('Profile picture upload failed');
+                const uploadData = await uploadResp.json();
+                profilePictureUrl = uploadData.fileUrl;
+            } catch (err) {
+                showAlert('Upload Error', 'Failed to upload profile picture: ' + err.message, 'error');
+                return;
+            }
+        }
+
         const availabilityStatus = document.getElementById('AvailabilityStatus').value;
         const headerData = {
             userId: this.querySelector('input[name="userId"]').value,
@@ -2105,7 +2134,28 @@ if (updateLanguagesForm) {
             showErrorModal('Please fix the following errors before saving:', validationErrors);
             return;
         }
-        
+
+        // Upload CV if a new PDF was selected
+        let cvPath = '';
+        const cvFileInput = document.getElementById('CvFile');
+        if (cvFileInput && cvFileInput.files.length > 0) {
+            try {
+                const fd = new FormData();
+                fd.append('file', cvFileInput.files[0]);
+                const uploadResp = await fetch(`/api/user/${REGION}/upload-cv`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${getJwtTokenFromCookie()}` },
+                    body: fd
+                });
+                if (!uploadResp.ok) throw new Error('CV upload failed');
+                const uploadData = await uploadResp.json();
+                cvPath = uploadData.fileUrl;
+            } catch (err) {
+                showAlert('Upload Error', 'Failed to upload CV: ' + err.message, 'error');
+                return;
+            }
+        }
+
         // Get form data ready
         const postalCodeValue = document.getElementById('PostalCode').value.trim();
         const contactData = {
@@ -2117,7 +2167,7 @@ if (updateLanguagesForm) {
             postalCode: postalCodeValue === '' ? 0 : parseInt(postalCodeValue) || 0,
             country: document.getElementById('Country').value,
             linkedin: document.getElementById('Linkedin').value,
-            cv: ''
+            cv: cvPath
         };
 
         const jwtToken = getJwtTokenFromCookie();
